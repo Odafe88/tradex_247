@@ -68,7 +68,7 @@ const Index = () => {
             transition={{ delay: 0.5 }}
             className="flex flex-col sm:flex-row gap-4 items-start"
           >
-            <Button size="lg" className="button-gradient" onClick={() => navigate("/dashboard")}>
+            <Button size="lg" className="button-gradient" onClick={() => navigate("/auth")}>
               Start Trading Now
             </Button>
             <Button size="lg" variant="link" className="text-white">
@@ -225,7 +225,7 @@ const Index = () => {
           <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
             Join thousands of traders who have already discovered the power of our platform.
           </p>
-          <Button size="lg" className="button-gradient" onClick={() => navigate("/dashboard")}>
+          <Button size="lg" className="button-gradient" onClick={() => navigate("/auth")}>
             Create Account
             <ArrowRight className="ml-2 w-4 h-4" />
           </Button>
