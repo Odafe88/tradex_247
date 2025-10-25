@@ -96,6 +96,98 @@ const Index = () => {
       {/* Logo Carousel */}
       <LogoCarousel />
 
+      {/* Markets Section */}
+      <section className="container px-4 py-20 bg-black">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          viewport={{ once: true }}
+          className="text-center mb-16"
+        >
+          <h2 className="text-3xl md:text-5xl font-bold mb-4">
+            Trade Multiple Markets
+          </h2>
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            Access cryptocurrency and forex markets from a single platform with real-time data and advanced trading tools.
+          </p>
+        </motion.div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+            viewport={{ once: true }}
+            className="glass rounded-xl p-8"
+          >
+            <div className="flex items-center gap-4 mb-6">
+              <div className="p-3 rounded-lg bg-primary/10">
+                <Command className="w-8 h-8 text-primary" />
+              </div>
+              <h3 className="text-2xl font-bold">Cryptocurrency</h3>
+            </div>
+            <p className="text-muted-foreground mb-6">
+              Trade popular cryptocurrencies including Bitcoin, Ethereum, Solana, and more with low fees and high liquidity.
+            </p>
+            <ul className="space-y-3">
+              <li className="flex items-center gap-2">
+                <div className="w-1.5 h-1.5 rounded-full bg-primary"></div>
+                <span>BTC, ETH, SOL, BNB, XRP, ADA</span>
+              </li>
+              <li className="flex items-center gap-2">
+                <div className="w-1.5 h-1.5 rounded-full bg-primary"></div>
+                <span>Real-time price updates</span>
+              </li>
+              <li className="flex items-center gap-2">
+                <div className="w-1.5 h-1.5 rounded-full bg-primary"></div>
+                <span>24/7 trading availability</span>
+              </li>
+              <li className="flex items-center gap-2">
+                <div className="w-1.5 h-1.5 rounded-full bg-primary"></div>
+                <span>Low transaction fees</span>
+              </li>
+            </ul>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            viewport={{ once: true }}
+            className="glass rounded-xl p-8"
+          >
+            <div className="flex items-center gap-4 mb-6">
+              <div className="p-3 rounded-lg bg-primary/10">
+                <ArrowRight className="w-8 h-8 text-primary" />
+              </div>
+              <h3 className="text-2xl font-bold">Forex</h3>
+            </div>
+            <p className="text-muted-foreground mb-6">
+              Access major, minor, and exotic currency pairs with competitive spreads and institutional-grade execution.
+            </p>
+            <ul className="space-y-3">
+              <li className="flex items-center gap-2">
+                <div className="w-1.5 h-1.5 rounded-full bg-primary"></div>
+                <span>EUR/USD, GBP/USD, USD/JPY, AUD/USD</span>
+              </li>
+              <li className="flex items-center gap-2">
+                <div className="w-1.5 h-1.5 rounded-full bg-primary"></div>
+                <span>Tight spreads from 0.1 pips</span>
+              </li>
+              <li className="flex items-center gap-2">
+                <div className="w-1.5 h-1.5 rounded-full bg-primary"></div>
+                <span>High leverage options</span>
+              </li>
+              <li className="flex items-center gap-2">
+                <div className="w-1.5 h-1.5 rounded-full bg-primary"></div>
+                <span>Advanced charting tools</span>
+              </li>
+            </ul>
+          </motion.div>
+        </div>
+      </section>
+
       {/* Features Section */}
       <div id="features" className="bg-black">
         <FeaturesSection />
