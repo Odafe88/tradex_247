@@ -6,9 +6,12 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
-import Trading from "./pages/dashboard/Trading";
-import Deposit from "./pages/dashboard/Deposit";
-import Assets from "./pages/dashboard/Assets";
+import Overview from "./pages/dashboard/Overview";
+import Reports from "./pages/dashboard/Reports";
+import Cryptocurrency from "./pages/dashboard/Cryptocurrency";
+import Exchange from "./pages/dashboard/Exchange";
+import Community from "./pages/dashboard/Community";
+import Settings from "./pages/dashboard/Settings";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 const queryClient = new QueryClient();
@@ -28,10 +31,12 @@ const App = () => (
                 <Dashboard />
               </ProtectedRoute>
             }>
-              <Route index element={<Navigate to="/dashboard/trading" replace />} />
-              <Route path="trading" element={<Trading />} />
-              <Route path="deposit" element={<Deposit />} />
-              <Route path="assets" element={<Assets />} />
+              <Route index element={<Overview />} />
+              <Route path="reports" element={<Reports />} />
+              <Route path="cryptocurrency" element={<Cryptocurrency />} />
+              <Route path="exchange" element={<Exchange />} />
+              <Route path="community" element={<Community />} />
+              <Route path="settings" element={<Settings />} />
             </Route>
           </Routes>
         </BrowserRouter>
