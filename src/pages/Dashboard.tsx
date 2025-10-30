@@ -7,12 +7,24 @@ import { useEffect, useState } from "react";
 const Dashboard = () => {
   const location = useLocation();
   const [userEmail, setUserEmail] = useState("");
+  const [fullName, setFullName] = useState("");
   
   useEffect(() => {
     const getUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         setUserEmail(user.email || "");
+        
+        // Fetch full name from profiles
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('full_name')
+          .eq('id', user.id)
+          .single();
+        
+        if (profile?.full_name) {
+          setFullName(profile.full_name);
+        }
       }
     };
     getUser();
@@ -94,11 +106,13 @@ const Dashboard = () => {
             </nav>
             <div className="flex items-center gap-3">
               <div className="text-right">
-                <div className="text-sm font-medium">Ilona Smiluet</div>
+                <div className="text-sm font-medium">{fullName || "User"}</div>
                 <div className="text-xs text-muted-foreground">{userEmail}</div>
               </div>
               <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center">
-                <span className="text-sm font-semibold">IS</span>
+                <span className="text-sm font-semibold">
+                  {fullName ? fullName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : "U"}
+                </span>
               </div>
             </div>
           </div>
