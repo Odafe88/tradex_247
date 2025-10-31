@@ -1,6 +1,10 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Download, RefreshCcw, TrendingUp, Bitcoin, DollarSign, BarChart3 } from "lucide-react";
+import { Wallet, RefreshCcw, TrendingUp, Bitcoin, DollarSign } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { Progress } from "@/components/ui/progress";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -32,6 +36,9 @@ const Overview = () => {
   const [balanceCrypto, setBalanceCrypto] = useState(0);
   const [balanceForex, setBalanceForex] = useState(0);
   const [totalProfit, setTotalProfit] = useState(0);
+  const [depositOpen, setDepositOpen] = useState(false);
+  const [depositWallet, setDepositWallet] = useState("crypto");
+  const [depositAmount, setDepositAmount] = useState("");
   const { data: cryptoData, isLoading } = useCryptoData();
   
   useEffect(() => {
@@ -55,6 +62,32 @@ const Overview = () => {
     getUser();
   }, []);
 
+  const handleDeposit = async () => {
+    const amount = parseFloat(depositAmount);
+    if (!amount || amount <= 0) return;
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const updateField = depositWallet === "crypto" ? "balance_crypto" : "balance_forex";
+    const currentBalance = depositWallet === "crypto" ? balanceCrypto : balanceForex;
+
+    const { error } = await supabase
+      .from('profiles')
+      .update({ [updateField]: currentBalance + amount })
+      .eq('id', user.id);
+
+    if (!error) {
+      if (depositWallet === "crypto") {
+        setBalanceCrypto(currentBalance + amount);
+      } else {
+        setBalanceForex(currentBalance + amount);
+      }
+      setDepositAmount("");
+      setDepositOpen(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -64,10 +97,47 @@ const Overview = () => {
           <p className="text-sm md:text-base text-muted-foreground">Track your performance and analytics.</p>
         </div>
         <div className="flex items-center gap-3">
-          <Button variant="outline" className="gap-2">
-            <Download className="w-4 h-4" />
-            <span className="hidden sm:inline">Download Report</span>
-          </Button>
+          <Dialog open={depositOpen} onOpenChange={setDepositOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline" className="gap-2">
+                <Wallet className="w-4 h-4" />
+                <span className="hidden sm:inline">Deposit</span>
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Deposit Funds</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Select Wallet</Label>
+                  <Select value={depositWallet} onValueChange={setDepositWallet}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="crypto">Crypto Wallet</SelectItem>
+                      <SelectItem value="forex">Forex Wallet</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Amount (USD)</Label>
+                  <Input
+                    type="number"
+                    placeholder="0.00"
+                    value={depositAmount}
+                    onChange={(e) => setDepositAmount(e.target.value)}
+                    min="0"
+                    step="0.01"
+                  />
+                </div>
+                <Button onClick={handleDeposit} className="w-full">
+                  Deposit
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
           <Button variant="outline" size="icon">
             <RefreshCcw className="w-4 h-4" />
           </Button>
@@ -75,7 +145,7 @@ const Overview = () => {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <Card>
           <CardContent className="p-4 md:p-6">
             <div className="flex items-center justify-between mb-2">
@@ -108,19 +178,6 @@ const Overview = () => {
             <p className={cn("text-xs mt-1", totalProfit >= 0 ? "text-primary" : "text-destructive")}>
               {totalProfit >= 0 ? "+" : ""}{((totalProfit / (balanceCrypto + balanceForex || 1)) * 100).toFixed(2)}%
             </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4 md:p-6">
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-sm text-muted-foreground">Market Cap</p>
-              <BarChart3 className="w-4 h-4 text-primary" />
-            </div>
-            <p className="text-xl md:text-2xl font-bold">
-              {cryptoData && !isLoading ? `$${(cryptoData.reduce((sum, coin) => sum + coin.market_cap, 0) / 1e9).toFixed(1)}B` : "Loading..."}
-            </p>
-            <p className="text-xs text-muted-foreground mt-1">Top 10 Coins</p>
           </CardContent>
         </Card>
       </div>
