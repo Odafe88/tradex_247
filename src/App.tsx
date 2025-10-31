@@ -10,6 +10,7 @@ import Overview from "./pages/dashboard/Overview";
 import Reports from "./pages/dashboard/Reports";
 import Cryptocurrency from "./pages/dashboard/Cryptocurrency";
 import Exchange from "./pages/dashboard/Exchange";
+import Forex from "./pages/dashboard/Forex";
 import Community from "./pages/dashboard/Community";
 import Settings from "./pages/dashboard/Settings";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -35,6 +36,7 @@ const App = () => (
               <Route path="reports" element={<Reports />} />
               <Route path="cryptocurrency" element={<Cryptocurrency />} />
               <Route path="exchange" element={<Exchange />} />
+              <Route path="forex" element={<Forex />} />
               <Route path="community" element={<Community />} />
               <Route path="settings" element={<Settings />} />
             </Route>

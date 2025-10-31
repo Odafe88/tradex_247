@@ -1,5 +1,5 @@
 import { Outlet, Link, useLocation } from "react-router-dom";
-import { BarChart3, FileText, Bitcoin, ArrowLeftRight, Users, Settings, TrendingUp } from "lucide-react";
+import { BarChart3, FileText, Bitcoin, ArrowLeftRight, Users, Settings, TrendingUp, DollarSign } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
@@ -35,6 +35,7 @@ const Dashboard = () => {
     { path: "/dashboard/reports", icon: BarChart3 },
     { path: "/dashboard/cryptocurrency", icon: Bitcoin },
     { path: "/dashboard/exchange", icon: ArrowLeftRight },
+    { path: "/dashboard/forex", icon: DollarSign },
     { path: "/dashboard/community", icon: Users },
     { path: "/dashboard/settings", icon: Settings },
   ];
@@ -44,6 +45,7 @@ const Dashboard = () => {
     { path: "/dashboard/reports", label: "Reports" },
     { path: "/dashboard/cryptocurrency", label: "Cryptocurrency" },
     { path: "/dashboard/exchange", label: "Exchange" },
+    { path: "/dashboard/forex", label: "Forex" },
     { path: "/dashboard/community", label: "Community" },
   ];
 
