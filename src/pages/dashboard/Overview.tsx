@@ -53,7 +53,7 @@ const Overview = () => {
           <div className="grid grid-cols-2 gap-4">
             <Card className="bg-card">
               <CardContent className="p-6">
-                <div className="text-xs text-muted-foreground mb-2">SPENT THIS MONTH</div>
+                <div className="text-xs text-muted-foreground mb-2">PROFIT THIS MONTH</div>
                 <div className="text-3xl font-bold mb-3">$5,950.64</div>
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
@@ -90,7 +90,7 @@ const Overview = () => {
           <Card className="bg-card">
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
-                <span>Active credit</span>
+                <span>Active Trade</span>
                 <div className="flex gap-4 text-sm font-normal">
                   <div className="flex items-center gap-2">
                     <span className="text-muted-foreground">1 BTC</span>
@@ -129,7 +129,7 @@ const Overview = () => {
           {/* Credit Score */}
           <Card className="bg-card">
             <CardContent className="p-6">
-              <div className="text-sm text-muted-foreground mb-4">Your credit score</div>
+              <div className="text-sm text-muted-foreground mb-4">Percentage Profit</div>
               <div className="flex items-center justify-center mb-4">
                 <div className="relative w-40 h-40">
                   <svg className="transform -rotate-90 w-40 h-40">
@@ -153,8 +153,7 @@ const Overview = () => {
                     />
                   </svg>
                   <div className="absolute inset-0 flex items-center justify-center flex-col">
-                    <div className="text-sm text-muted-foreground">80%</div>
-                    <div className="text-4xl font-bold">660</div>
+                    <div className="text-4xl font-bold">80%</div>
                   </div>
                 </div>
               </div>
