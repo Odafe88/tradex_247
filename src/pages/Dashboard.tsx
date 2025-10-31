@@ -1,13 +1,15 @@
 import { Outlet, Link, useLocation } from "react-router-dom";
-import { BarChart3, FileText, Bitcoin, ArrowLeftRight, Users, Settings, TrendingUp, DollarSign } from "lucide-react";
+import { BarChart3, FileText, Bitcoin, ArrowLeftRight, Users, Settings, TrendingUp, DollarSign, Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
 
 const Dashboard = () => {
   const location = useLocation();
   const [userEmail, setUserEmail] = useState("");
   const [fullName, setFullName] = useState("");
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   
   useEffect(() => {
     const getUser = async () => {
@@ -51,8 +53,8 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-background text-foreground flex">
-      {/* Left Sidebar */}
-      <aside className="w-16 border-r border-border bg-card flex flex-col items-center py-6 space-y-6">
+      {/* Left Sidebar - Desktop */}
+      <aside className="hidden md:flex w-16 border-r border-border bg-card flex-col items-center py-6 space-y-6">
         <Link to="/dashboard" className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center font-bold text-lg">
           P
         </Link>
@@ -80,12 +82,65 @@ const Dashboard = () => {
         </div>
       </aside>
 
+      {/* Mobile Sidebar */}
+      {isMobileMenuOpen && (
+        <div className="md:hidden fixed inset-0 z-50 bg-background/80 backdrop-blur-sm">
+          <aside className="fixed left-0 top-0 bottom-0 w-64 border-r border-border bg-card p-6">
+            <div className="flex items-center justify-between mb-8">
+              <Link to="/dashboard" className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center font-bold text-lg">
+                P
+              </Link>
+              <Button variant="ghost" size="icon" onClick={() => setIsMobileMenuOpen(false)}>
+                <X className="w-5 h-5" />
+              </Button>
+            </div>
+            <nav className="space-y-2">
+              {sidebarItems.map((item) => {
+                const Icon = item.icon;
+                const isActive = item.exact 
+                  ? location.pathname === item.path 
+                  : location.pathname.startsWith(item.path) && item.path !== "/dashboard";
+                return (
+                  <Link
+                    key={item.path}
+                    to={item.path}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className={cn(
+                      "flex items-center gap-3 px-4 py-3 rounded-lg transition-colors",
+                      isActive
+                        ? "bg-muted text-foreground"
+                        : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+                    )}
+                  >
+                    <Icon className="w-5 h-5" />
+                    <span className="text-sm font-medium">
+                      {topNavItems.find(nav => nav.path === item.path)?.label || "Dashboard"}
+                    </span>
+                  </Link>
+                );
+              })}
+            </nav>
+          </aside>
+        </div>
+      )}
+
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
         {/* Top Header */}
         <header className="border-b border-border bg-card">
-          <div className="px-8 py-4 flex items-center justify-between">
-            <nav className="flex gap-8">
+          <div className="px-4 md:px-8 py-4 flex items-center justify-between">
+            {/* Mobile Menu Button */}
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="md:hidden"
+              onClick={() => setIsMobileMenuOpen(true)}
+            >
+              <Menu className="w-5 h-5" />
+            </Button>
+
+            {/* Desktop Navigation */}
+            <nav className="hidden md:flex gap-8">
               {topNavItems.map((item) => {
                 const isActive = item.path === "/dashboard" 
                   ? location.pathname === item.path
@@ -106,8 +161,10 @@ const Dashboard = () => {
                 );
               })}
             </nav>
+
+            {/* User Info */}
             <div className="flex items-center gap-3">
-              <div className="text-right">
+              <div className="text-right hidden sm:block">
                 <div className="text-sm font-medium">{fullName || "User"}</div>
                 <div className="text-xs text-muted-foreground">{userEmail}</div>
               </div>
@@ -121,7 +178,7 @@ const Dashboard = () => {
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 p-8">
+        <main className="flex-1 p-4 md:p-8 overflow-auto">
           <Outlet />
         </main>
       </div>

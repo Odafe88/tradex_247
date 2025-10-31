@@ -16,24 +16,33 @@ export type Database = {
     Tables: {
       profiles: {
         Row: {
+          balance_crypto: number | null
+          balance_forex: number | null
           created_at: string
           email: string
           full_name: string | null
           id: string
+          total_profit: number | null
           updated_at: string
         }
         Insert: {
+          balance_crypto?: number | null
+          balance_forex?: number | null
           created_at?: string
           email: string
           full_name?: string | null
           id: string
+          total_profit?: number | null
           updated_at?: string
         }
         Update: {
+          balance_crypto?: number | null
+          balance_forex?: number | null
           created_at?: string
           email?: string
           full_name?: string | null
           id?: string
+          total_profit?: number | null
           updated_at?: string
         }
         Relationships: []
