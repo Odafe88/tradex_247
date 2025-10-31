@@ -45,7 +45,7 @@ const Dashboard = () => {
   const topNavItems = [
     { path: "/dashboard", label: "Dashboard" },
     { path: "/dashboard/reports", label: "Reports" },
-    { path: "/dashboard/cryptocurrency", label: "Cryptocurrency" },
+    { path: "/dashboard/cryptocurrency", label: "Crypto" },
     { path: "/dashboard/exchange", label: "Exchange" },
     { path: "/dashboard/forex", label: "Forex" },
     { path: "/dashboard/community", label: "Community" },

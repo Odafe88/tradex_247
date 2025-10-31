@@ -56,7 +56,7 @@ const Index = () => {
         <div className="max-w-4xl relative z-10">
           <h1 className="text-5xl md:text-7xl font-normal mb-4 tracking-tight text-left">
             <span className="text-gray-200">
-              <TextGenerateEffect words="Trade crypto and FOREX with" />
+              <TextGenerateEffect words="Trade crypto and Forex with" />
             </span>
             <br />
             <span className="text-white font-medium">
@@ -70,8 +70,8 @@ const Index = () => {
             transition={{ delay: 0.4 }}
             className="text-lg md:text-xl text-gray-200 mb-8 max-w-2xl text-left"
           >
-            Experience seamless cryptocurrency trading with advanced features, real-time analytics, and institutional-grade security.{" "}
-            <span className="text-white">Start trading in minutes.</span>
+            Experience MEV trading opportunities in both crypto and Forex markets with advanced features, real-time analytics, and institutional-grade security.{" "}
+            <span className="text-white">Maximize your edge in minutes.</span>
           </motion.p>
           
           <motion.div
@@ -118,10 +118,10 @@ const Index = () => {
           className="text-center mb-16"
         >
           <h2 className="text-3xl md:text-5xl font-bold mb-4">
-            Trade Multiple Markets
+            MEV Trading Across Multiple Markets
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Access cryptocurrency and forex markets from a single platform with real-time data and advanced trading tools.
+            Leverage MEV (Maximum Extractable Value) strategies across crypto and Forex markets with real-time data, advanced trading tools, and institutional-grade execution.
           </p>
         </motion.div>
 
@@ -140,7 +140,7 @@ const Index = () => {
               <h3 className="text-2xl font-bold">Cryptocurrency</h3>
             </div>
             <p className="text-muted-foreground mb-6">
-              Trade popular cryptocurrencies including Bitcoin, Ethereum, Solana, and more with low fees and high liquidity.
+              Execute MEV strategies on popular cryptocurrencies including Bitcoin, Ethereum, Solana, and more with low fees and high liquidity.
             </p>
             <ul className="space-y-3">
               <li className="flex items-center gap-2">
@@ -149,7 +149,7 @@ const Index = () => {
               </li>
               <li className="flex items-center gap-2">
                 <div className="w-1.5 h-1.5 rounded-full bg-primary"></div>
-                <span>Real-time price updates</span>
+                <span>MEV opportunity detection</span>
               </li>
               <li className="flex items-center gap-2">
                 <div className="w-1.5 h-1.5 rounded-full bg-primary"></div>
@@ -176,7 +176,7 @@ const Index = () => {
               <h3 className="text-2xl font-bold">Forex</h3>
             </div>
             <p className="text-muted-foreground mb-6">
-              Access major, minor, and exotic currency pairs with competitive spreads and institutional-grade execution.
+              Apply MEV strategies to major, minor, and exotic currency pairs with competitive spreads and institutional-grade execution.
             </p>
             <ul className="space-y-3">
               <li className="flex items-center gap-2">
@@ -185,7 +185,7 @@ const Index = () => {
               </li>
               <li className="flex items-center gap-2">
                 <div className="w-1.5 h-1.5 rounded-full bg-primary"></div>
-                <span>Tight spreads from 0.1 pips</span>
+                <span>Arbitrage opportunity alerts</span>
               </li>
               <li className="flex items-center gap-2">
                 <div className="w-1.5 h-1.5 rounded-full bg-primary"></div>
