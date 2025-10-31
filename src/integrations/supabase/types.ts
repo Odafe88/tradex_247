@@ -47,6 +47,48 @@ export type Database = {
         }
         Relationships: []
       }
+      trades: {
+        Row: {
+          asset_name: string
+          asset_symbol: string
+          created_at: string
+          current_value: number
+          end_time: string
+          id: string
+          initial_amount: number
+          is_active: boolean
+          start_time: string
+          trade_type: string
+          user_id: string
+        }
+        Insert: {
+          asset_name: string
+          asset_symbol: string
+          created_at?: string
+          current_value: number
+          end_time: string
+          id?: string
+          initial_amount: number
+          is_active?: boolean
+          start_time?: string
+          trade_type: string
+          user_id: string
+        }
+        Update: {
+          asset_name?: string
+          asset_symbol?: string
+          created_at?: string
+          current_value?: number
+          end_time?: string
+          id?: string
+          initial_amount?: number
+          is_active?: boolean
+          start_time?: string
+          trade_type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
