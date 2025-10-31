@@ -3,11 +3,12 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Bot } from "lucide-react";
-import { useState } from "react";
+import { Bot, Wallet } from "lucide-react";
+import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useTrades } from "@/hooks/useTrades";
 import AIBotChart from "@/components/AIBotChart";
+import { supabase } from "@/integrations/supabase/client";
 
 const cryptoList = [
   { name: "Bitcoin", symbol: "BTC", price: "$52,291", change: "+2.45%", positive: true, icon: "₿" },
@@ -21,8 +22,29 @@ const cryptoList = [
 const Cryptocurrency = () => {
   const [selectedCrypto, setSelectedCrypto] = useState("BTC");
   const [tradeAmount, setTradeAmount] = useState("");
+  const [balance, setBalance] = useState<number>(0);
   const { toast } = useToast();
   const { trades, createTrade, calculateCurrentValue } = useTrades('crypto');
+
+  // Fetch user balance
+  useEffect(() => {
+    const fetchBalance = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('balance_crypto')
+        .eq('id', user.id)
+        .single();
+
+      if (profile) {
+        setBalance(profile.balance_crypto || 0);
+      }
+    };
+
+    fetchBalance();
+  }, [trades]);
 
   const handleTrade = () => {
     if (!tradeAmount || parseFloat(tradeAmount) <= 0) {
@@ -60,6 +82,14 @@ const Cryptocurrency = () => {
           <CardContent className="p-6">
             <h2 className="text-xl font-semibold mb-4">Start Trade</h2>
             <div className="space-y-4">
+              <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                <div className="flex items-center gap-2">
+                  <Wallet className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm font-medium">Balance</span>
+                </div>
+                <span className="text-lg font-bold">${balance.toFixed(2)}</span>
+              </div>
+
               <div className="space-y-2">
                 <Label>Cryptocurrency</Label>
                 <Select value={selectedCrypto} onValueChange={setSelectedCrypto}>
@@ -91,10 +121,10 @@ const Cryptocurrency = () => {
               <Button 
                 onClick={handleTrade} 
                 className="w-full gap-2"
-                disabled={createTrade.isPending || !!activeTrade}
+                disabled={createTrade.isPending || !!activeTrade || balance === 0}
               >
                 <Bot className="w-4 h-4" />
-                {activeTrade ? "Trade Active" : "Start AI Trade"}
+                {balance === 0 ? "No Balance" : activeTrade ? "Trade Active" : "Start AI Trade"}
               </Button>
 
               {activeTrade && (

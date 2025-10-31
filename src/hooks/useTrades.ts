@@ -47,8 +47,31 @@ export const useTrades = (tradeType: 'crypto' | 'forex') => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
+      // Check user balance
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('balance_crypto, balance_forex')
+        .eq('id', user.id)
+        .single();
+
+      if (profileError) throw profileError;
+
+      const balance = tradeType === 'crypto' ? profile.balance_crypto : profile.balance_forex;
+      if (!balance || balance < initial_amount) {
+        throw new Error('Insufficient balance');
+      }
+
       const start_time = new Date();
       const end_time = new Date(start_time.getTime() + 24 * 60 * 60 * 1000);
+
+      // Deduct balance and create trade in a transaction
+      const balanceField = tradeType === 'crypto' ? 'balance_crypto' : 'balance_forex';
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ [balanceField]: balance - initial_amount })
+        .eq('id', user.id);
+
+      if (updateError) throw updateError;
 
       const { data, error } = await supabase
         .from('trades')

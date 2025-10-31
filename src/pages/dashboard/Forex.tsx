@@ -4,10 +4,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { TrendingUp, TrendingDown, Wallet } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useTrades } from "@/hooks/useTrades";
 import AIBotChart from "@/components/AIBotChart";
+import { supabase } from "@/integrations/supabase/client";
 
 const forexPairs = [
   { pair: "EUR/USD", price: "1.0892", change: "+0.15%", positive: true, name: "Euro / US Dollar" },
@@ -23,8 +24,29 @@ const forexPairs = [
 const Forex = () => {
   const [selectedPair, setSelectedPair] = useState("EUR/USD");
   const [amount, setAmount] = useState("");
+  const [balance, setBalance] = useState<number>(0);
   const { toast } = useToast();
   const { trades, createTrade, calculateCurrentValue } = useTrades('forex');
+
+  // Fetch user balance
+  useEffect(() => {
+    const fetchBalance = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('balance_forex')
+        .eq('id', user.id)
+        .single();
+
+      if (profile) {
+        setBalance(profile.balance_forex || 0);
+      }
+    };
+
+    fetchBalance();
+  }, [trades]);
 
   const handleDeposit = () => {
     if (!amount || parseFloat(amount) <= 0) {
@@ -62,6 +84,14 @@ const Forex = () => {
           <CardContent className="p-6">
             <h2 className="text-xl font-semibold mb-4">Deposit & Trade</h2>
             <div className="space-y-4">
+              <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                <div className="flex items-center gap-2">
+                  <Wallet className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm font-medium">Balance</span>
+                </div>
+                <span className="text-lg font-bold">${balance.toFixed(2)}</span>
+              </div>
+
               <div className="space-y-2">
                 <Label>Currency Pair</Label>
                 <Select value={selectedPair} onValueChange={setSelectedPair}>
@@ -93,10 +123,10 @@ const Forex = () => {
               <Button 
                 onClick={handleDeposit} 
                 className="w-full gap-2"
-                disabled={createTrade.isPending || !!activeTrade}
+                disabled={createTrade.isPending || !!activeTrade || balance === 0}
               >
                 <Wallet className="w-4 h-4" />
-                {activeTrade ? "Trade Active" : "Start AI Trade"}
+                {balance === 0 ? "No Balance" : activeTrade ? "Trade Active" : "Start AI Trade"}
               </Button>
 
               {activeTrade && (
