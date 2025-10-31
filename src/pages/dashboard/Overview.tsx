@@ -5,6 +5,8 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { Progress } from "@/components/ui/progress";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 const chartData = [
   { time: "2:00pm", btc: 8420, eth: 2980 },
@@ -25,13 +27,33 @@ const paymentHistory = [
 ];
 
 const Overview = () => {
+  const [fullName, setFullName] = useState("");
+  
+  useEffect(() => {
+    const getUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('full_name')
+          .eq('id', user.id)
+          .single();
+        
+        if (profile?.full_name) {
+          setFullName(profile.full_name);
+        }
+      }
+    };
+    getUser();
+  }, []);
+
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold mb-2">Welcome back, Ilona</h1>
-          <p className="text-muted-foreground">Here's take a look at your performance and analytics.</p>
+          <h1 className="text-3xl font-bold mb-2">Welcome back{fullName ? `, ${fullName}` : ""}</h1>
+          <p className="text-muted-foreground">Track your performance and analytics.</p>
         </div>
         <div className="flex items-center gap-3">
           <Button variant="outline" className="gap-2">
