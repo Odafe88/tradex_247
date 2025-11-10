@@ -108,6 +108,79 @@ export const useTrades = (tradeType: 'crypto' | 'forex') => {
     },
   });
 
+  const endTrade = useMutation({
+    mutationFn: async (tradeId: string) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+
+      // Get the current trade
+      const { data: trade, error: tradeError } = await supabase
+        .from('trades')
+        .select('*')
+        .eq('id', tradeId)
+        .single();
+
+      if (tradeError) throw tradeError;
+      if (!trade) throw new Error('Trade not found');
+
+      // Calculate current value
+      const currentValue = calculateCurrentValue(trade as Trade);
+      const profit = currentValue - trade.initial_amount;
+
+      // Update trade to inactive and set final current_value
+      const { error: updateTradeError } = await supabase
+        .from('trades')
+        .update({ 
+          is_active: false, 
+          current_value: currentValue,
+          end_time: new Date().toISOString()
+        })
+        .eq('id', tradeId);
+
+      if (updateTradeError) throw updateTradeError;
+
+      // Get current profile
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('balance_crypto, balance_forex, total_profit')
+        .eq('id', user.id)
+        .single();
+
+      if (profileError) throw profileError;
+
+      // Update profile with profit and return balance
+      const balanceField = tradeType === 'crypto' ? 'balance_crypto' : 'balance_forex';
+      const currentBalance = tradeType === 'crypto' ? profile.balance_crypto : profile.balance_forex;
+      
+      const { error: updateProfileError } = await supabase
+        .from('profiles')
+        .update({ 
+          [balanceField]: (currentBalance || 0) + currentValue,
+          total_profit: (profile.total_profit || 0) + profit
+        })
+        .eq('id', user.id);
+
+      if (updateProfileError) throw updateProfileError;
+
+      return { profit, currentValue };
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['trades', tradeType] });
+      toast({
+        title: "Trade Ended",
+        description: `Profit: $${data.profit.toFixed(2)} | Final Value: $${data.currentValue.toFixed(2)}`,
+        variant: data.profit >= 0 ? "default" : "destructive",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   const calculateCurrentValue = (trade: Trade) => {
     const now = new Date();
     const startTime = new Date(trade.start_time);
@@ -128,6 +201,7 @@ export const useTrades = (tradeType: 'crypto' | 'forex') => {
     trades,
     isLoading,
     createTrade,
+    endTrade,
     calculateCurrentValue,
   };
 };

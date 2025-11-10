@@ -24,7 +24,7 @@ const Cryptocurrency = () => {
   const [tradeAmount, setTradeAmount] = useState("");
   const [balance, setBalance] = useState<number>(0);
   const { toast } = useToast();
-  const { trades, createTrade, calculateCurrentValue } = useTrades('crypto');
+  const { trades, createTrade, endTrade, calculateCurrentValue } = useTrades('crypto');
 
   // Fetch user balance
   useEffect(() => {
@@ -128,9 +128,14 @@ const Cryptocurrency = () => {
               </Button>
 
               {activeTrade && (
-                <p className="text-sm text-muted-foreground text-center">
-                  You have an active trade running
-                </p>
+                <Button 
+                  onClick={() => endTrade.mutate(activeTrade.id)}
+                  variant="destructive"
+                  className="w-full gap-2"
+                  disabled={endTrade.isPending}
+                >
+                  Stop Trade
+                </Button>
               )}
             </div>
           </CardContent>
