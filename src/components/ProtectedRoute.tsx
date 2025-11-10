@@ -23,7 +23,17 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
       setAuthenticated(!!session);
     });
 
-    return () => subscription.unsubscribe();
+    // Sign out user when they close the browser/tab
+    const handleBeforeUnload = () => {
+      supabase.auth.signOut();
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+      subscription.unsubscribe();
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
   }, []);
 
   if (loading) {

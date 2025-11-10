@@ -19,6 +19,14 @@ const forexPairs = [
   { pair: "USD/CAD", price: "1.3678", change: "-0.21%", positive: false, name: "US Dollar / Canadian Dollar" },
   { pair: "NZD/USD", price: "0.5892", change: "+0.33%", positive: true, name: "New Zealand Dollar / US Dollar" },
   { pair: "EUR/GBP", price: "0.8552", change: "-0.05%", positive: false, name: "Euro / British Pound" },
+  { pair: "EUR/CAD", price: "1.4892", change: "+0.18%", positive: true, name: "Euro / Canadian Dollar" },
+  { pair: "GBP/CAD", price: "1.7412", change: "+0.22%", positive: true, name: "British Pound / Canadian Dollar" },
+  { pair: "GBP/JPY", price: "190.68", change: "-0.15%", positive: false, name: "British Pound / Japanese Yen" },
+  { pair: "EUR/JPY", price: "163.21", change: "+0.11%", positive: true, name: "Euro / Japanese Yen" },
+  { pair: "USOIL", price: "83.45", change: "+1.24%", positive: true, name: "US Oil (WTI Crude)" },
+  { pair: "AUD/CHF", price: "0.5768", change: "+0.35%", positive: true, name: "Australian Dollar / Swiss Franc" },
+  { pair: "AUD/NZD", price: "1.1067", change: "+0.09%", positive: true, name: "Australian Dollar / New Zealand Dollar" },
+  { pair: "XAU/USD", price: "2652.30", change: "+0.58%", positive: true, name: "Gold / US Dollar" },
 ];
 
 const Forex = () => {
