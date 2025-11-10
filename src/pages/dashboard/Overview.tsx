@@ -13,6 +13,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useCryptoData } from "@/hooks/useCryptoData";
 import { useToast } from "@/hooks/use-toast";
+import { WalletConnectDeposit } from "@/components/WalletConnectDeposit";
 
 const chartData = [
   { time: "2:00pm", btc: 8420, eth: 2980 },
@@ -40,6 +41,7 @@ const Overview = () => {
   const [totalProfit, setTotalProfit] = useState(0);
   const [depositOpen, setDepositOpen] = useState(false);
   const [withdrawOpen, setWithdrawOpen] = useState(false);
+  const [cryptoDepositOpen, setCryptoDepositOpen] = useState(false);
   const [depositWallet, setDepositWallet] = useState("crypto");
   const [withdrawWallet, setWithdrawWallet] = useState("crypto");
   const [depositAmount, setDepositAmount] = useState("");
@@ -66,6 +68,24 @@ const Overview = () => {
     };
     getUser();
   }, []);
+
+  const handleCryptoDeposit = async (usdAmount: number) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const { error } = await supabase
+      .from('profiles')
+      .update({ balance_crypto: balanceCrypto + usdAmount })
+      .eq('id', user.id);
+
+    if (!error) {
+      setBalanceCrypto(balanceCrypto + usdAmount);
+      toast({
+        title: "Deposit Confirmed",
+        description: `$${usdAmount.toFixed(2)} added to your crypto wallet`,
+      });
+    }
+  };
 
   const handleDeposit = async () => {
     const amount = parseFloat(depositAmount);
@@ -206,12 +226,31 @@ const Overview = () => {
                     step="0.01"
                   />
                 </div>
-                <Button onClick={handleDeposit} className="w-full">
-                  Deposit
-                </Button>
+                <div className="space-y-2">
+                  <Button onClick={handleDeposit} className="w-full">
+                    Deposit (Demo)
+                  </Button>
+                  <Button 
+                    onClick={() => {
+                      setDepositOpen(false);
+                      setCryptoDepositOpen(true);
+                    }}
+                    variant="outline"
+                    className="w-full gap-2"
+                  >
+                    <Wallet className="w-4 h-4" />
+                    Deposit with Crypto
+                  </Button>
+                </div>
               </div>
             </DialogContent>
           </Dialog>
+          
+          <WalletConnectDeposit 
+            open={cryptoDepositOpen}
+            onOpenChange={setCryptoDepositOpen}
+            onDepositComplete={handleCryptoDeposit}
+          />
           
           <Dialog open={withdrawOpen} onOpenChange={setWithdrawOpen}>
             <DialogTrigger asChild>
@@ -302,7 +341,7 @@ const Overview = () => {
             </div>
             <p className="text-xl md:text-2xl font-bold">${totalProfit.toFixed(2)}</p>
             <p className={cn("text-xs mt-1", totalProfit >= 0 ? "text-primary" : "text-destructive")}>
-              {totalProfit >= 0 ? "+" : ""}{((totalProfit / (balanceCrypto + balanceForex || 1)) * 100).toFixed(2)}%
+              Lifetime Earnings
             </p>
           </CardContent>
         </Card>
@@ -379,21 +418,21 @@ const Overview = () => {
                     stroke="#4ADE80"
                     strokeWidth="12"
                     fill="none"
-                    strokeDasharray={`${((balanceCrypto + balanceForex) > 0 ? (totalProfit / (balanceCrypto + balanceForex)) : 0) * 100 * 2.2} ${100 * 2.2}`}
+                    strokeDasharray={`${(totalProfit > 0 ? Math.min(totalProfit, 100) : 0) * 2.2} ${100 * 2.2}`}
                     strokeLinecap="round"
                   />
                 </svg>
                 <div className="absolute inset-0 flex items-center justify-center flex-col">
-                  <div className="text-2xl md:text-4xl font-bold">
-                    {((balanceCrypto + balanceForex) > 0 ? (totalProfit / (balanceCrypto + balanceForex) * 100) : 0).toFixed(0)}%
-                  </div>
+                <div className="text-2xl md:text-4xl font-bold">
+                  {totalProfit.toFixed(0)}%
+                </div>
                 </div>
               </div>
             </div>
             <div className="text-center">
               <div className="text-sm">Profit margin</div>
               <div className={cn("text-xs mt-1", totalProfit >= 0 ? "text-primary" : "text-destructive")}>
-                {totalProfit >= 0 ? "↑" : "↓"} {totalProfit >= 0 ? "+" : ""}{totalProfit.toFixed(2)}
+                {totalProfit >= 0 ? "↑" : "↓"} Lifetime
               </div>
             </div>
           </CardContent>
