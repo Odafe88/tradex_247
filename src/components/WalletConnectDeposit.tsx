@@ -9,7 +9,7 @@ import { createWeb3Modal, defaultConfig } from '@web3modal/ethers/react';
 import { BrowserProvider, parseEther } from 'ethers';
 
 // WalletConnect project ID - Get yours at https://cloud.walletconnect.com
-const projectId = 'YOUR_PROJECT_ID'; // Replace with actual project ID
+const projectId = '2716cddbc256234b38ae257dc6a65dad';
 
 // Define chains
 const mainnet = {
@@ -68,8 +68,8 @@ export function WalletConnectDeposit({ open, onOpenChange, onDepositComplete }: 
   const [isProcessing, setIsProcessing] = useState(false);
   const [copied, setCopied] = useState(false);
   
-  // Platform wallet address (replace with your actual wallet)
-  const platformWalletAddress = "0x742d35Cc6634C0532925a3b844Bc454e4438f44e";
+  // Platform wallet address
+  const platformWalletAddress = "0xF644DECDd09eE9afd246e1E397016bAa42bEb122";
 
   const connectWallet = async () => {
     setIsConnecting(true);
