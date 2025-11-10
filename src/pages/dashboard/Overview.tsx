@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Wallet, RefreshCcw, TrendingUp, Bitcoin, DollarSign } from "lucide-react";
+import { Wallet, RefreshCcw, TrendingUp, Bitcoin, DollarSign, ArrowDownToLine } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useCryptoData } from "@/hooks/useCryptoData";
+import { useToast } from "@/hooks/use-toast";
 
 const chartData = [
   { time: "2:00pm", btc: 8420, eth: 2980 },
@@ -32,13 +33,17 @@ const paymentHistory = [
 ];
 
 const Overview = () => {
+  const { toast } = useToast();
   const [fullName, setFullName] = useState("");
   const [balanceCrypto, setBalanceCrypto] = useState(0);
   const [balanceForex, setBalanceForex] = useState(0);
   const [totalProfit, setTotalProfit] = useState(0);
   const [depositOpen, setDepositOpen] = useState(false);
+  const [withdrawOpen, setWithdrawOpen] = useState(false);
   const [depositWallet, setDepositWallet] = useState("crypto");
+  const [withdrawWallet, setWithdrawWallet] = useState("crypto");
   const [depositAmount, setDepositAmount] = useState("");
+  const [withdrawAmount, setWithdrawAmount] = useState("");
   const { data: cryptoData, isLoading } = useCryptoData();
   
   useEffect(() => {
@@ -64,7 +69,14 @@ const Overview = () => {
 
   const handleDeposit = async () => {
     const amount = parseFloat(depositAmount);
-    if (!amount || amount <= 0) return;
+    if (!amount || amount <= 0) {
+      toast({
+        title: "Invalid Amount",
+        description: "Please enter a valid deposit amount",
+        variant: "destructive",
+      });
+      return;
+    }
 
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
@@ -85,6 +97,68 @@ const Overview = () => {
       }
       setDepositAmount("");
       setDepositOpen(false);
+      toast({
+        title: "Success",
+        description: `Deposited $${amount.toFixed(2)} to ${depositWallet === "crypto" ? "Crypto" : "Forex"} wallet`,
+      });
+    } else {
+      toast({
+        title: "Error",
+        description: "Failed to deposit funds",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleWithdraw = async () => {
+    const amount = parseFloat(withdrawAmount);
+    if (!amount || amount <= 0) {
+      toast({
+        title: "Invalid Amount",
+        description: "Please enter a valid withdrawal amount",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const updateField = withdrawWallet === "crypto" ? "balance_crypto" : "balance_forex";
+    const currentBalance = withdrawWallet === "crypto" ? balanceCrypto : balanceForex;
+
+    if (amount > currentBalance) {
+      toast({
+        title: "Insufficient Balance",
+        description: "You don't have enough balance to withdraw this amount",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const { error } = await supabase
+      .from('profiles')
+      .update({ [updateField]: currentBalance - amount })
+      .eq('id', user.id);
+
+    if (!error) {
+      if (withdrawWallet === "crypto") {
+        setBalanceCrypto(currentBalance - amount);
+      } else {
+        setBalanceForex(currentBalance - amount);
+      }
+      setWithdrawAmount("");
+      setWithdrawOpen(false);
+      toast({
+        title: "Success",
+        description: `Withdrew $${amount.toFixed(2)} from ${withdrawWallet === "crypto" ? "Crypto" : "Forex"} wallet`,
+      });
+    } else {
+      toast({
+        title: "Error",
+        description: "Failed to withdraw funds",
+        variant: "destructive",
+      });
     }
   };
 
@@ -138,6 +212,58 @@ const Overview = () => {
               </div>
             </DialogContent>
           </Dialog>
+          
+          <Dialog open={withdrawOpen} onOpenChange={setWithdrawOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline" className="gap-2">
+                <ArrowDownToLine className="w-4 h-4" />
+                <span className="hidden sm:inline">Withdraw</span>
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Withdraw Funds</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Select Wallet</Label>
+                  <Select value={withdrawWallet} onValueChange={setWithdrawWallet}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="crypto">Crypto Wallet</SelectItem>
+                      <SelectItem value="forex">Forex Wallet</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Available Balance</Label>
+                  <div className="p-3 bg-muted rounded-lg">
+                    <span className="text-lg font-bold">
+                      ${(withdrawWallet === "crypto" ? balanceCrypto : balanceForex).toFixed(2)}
+                    </span>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>Amount (USD)</Label>
+                  <Input
+                    type="number"
+                    placeholder="0.00"
+                    value={withdrawAmount}
+                    onChange={(e) => setWithdrawAmount(e.target.value)}
+                    min="0"
+                    max={withdrawWallet === "crypto" ? balanceCrypto : balanceForex}
+                    step="0.01"
+                  />
+                </div>
+                <Button onClick={handleWithdraw} className="w-full">
+                  Withdraw
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+          
           <Button variant="outline" size="icon">
             <RefreshCcw className="w-4 h-4" />
           </Button>
