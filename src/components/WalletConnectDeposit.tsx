@@ -4,9 +4,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Wallet, Copy, Check, Loader2 } from "lucide-react";
+import { Wallet, Copy, Check, Loader2, AlertTriangle } from "lucide-react";
 import { createWeb3Modal, defaultConfig } from '@web3modal/ethers/react';
 import { BrowserProvider, parseEther } from 'ethers';
+import { z } from "zod";
+
+const depositSchema = z.object({
+  amount: z.number().positive("Amount must be positive").min(0.001, "Minimum deposit is 0.001 ETH").max(100, "Maximum deposit is 100 ETH"),
+});
 
 // WalletConnect project ID - Get yours at https://cloud.walletconnect.com
 const projectId = '2716cddbc256234b38ae257dc6a65dad';
@@ -116,19 +121,33 @@ export function WalletConnectDeposit({ open, onOpenChange, onDepositComplete }: 
     }
 
     const amount = parseFloat(depositAmount);
-    if (!amount || amount <= 0) {
-      toast({
-        title: "Invalid Amount",
-        description: "Please enter a valid deposit amount",
-        variant: "destructive",
-      });
-      return;
+    
+    // Validate amount with zod
+    try {
+      depositSchema.parse({ amount });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        toast({
+          title: "Invalid Amount",
+          description: error.errors[0].message,
+          variant: "destructive",
+        });
+        return;
+      }
     }
 
     setIsProcessing(true);
     try {
       const provider = new BrowserProvider(window.ethereum as any);
       const signer = await provider.getSigner();
+      
+      // Verify network
+      const network = await provider.getNetwork();
+      const chainId = Number(network.chainId);
+      
+      if (chainId !== 1 && chainId !== 11155111) {
+        throw new Error("Please switch to Ethereum Mainnet or Sepolia Testnet");
+      }
       
       // Send transaction
       const tx = await signer.sendTransaction({
@@ -138,20 +157,36 @@ export function WalletConnectDeposit({ open, onOpenChange, onDepositComplete }: 
 
       toast({
         title: "Transaction Sent",
-        description: "Waiting for confirmation...",
+        description: "Waiting for confirmations...",
       });
 
-      // Wait for confirmation
-      const receipt = await tx.wait();
+      // Wait for 3 confirmations for better security
+      const receipt = await tx.wait(3);
       
       if (receipt?.status === 1) {
+        // Verify transaction went to correct address
+        if (receipt.to?.toLowerCase() !== platformWalletAddress.toLowerCase()) {
+          throw new Error("Transaction sent to wrong address");
+        }
+        
         // Convert ETH to USD (simplified - in production, use real price feed)
         const usdAmount = amount * 2000; // Assuming 1 ETH = $2000
         
+        // Only credit if on mainnet (chainId 1)
+        if (chainId === 11155111) {
+          toast({
+            title: "Testnet Deposit",
+            description: "Testnet deposits have no real value. Switch to mainnet for real deposits.",
+            variant: "destructive",
+          });
+          setIsProcessing(false);
+          return;
+        }
+        
         onDepositComplete(usdAmount);
         toast({
-          title: "Deposit Successful",
-          description: `Deposited ${amount} ETH (~$${usdAmount.toFixed(2)})`,
+          title: "Deposit Confirmed",
+          description: `Deposited ${amount} ETH (~$${usdAmount.toFixed(2)}) with 3 confirmations`,
         });
         onOpenChange(false);
         setDepositAmount("");
@@ -293,6 +328,18 @@ export function WalletConnectDeposit({ open, onOpenChange, onDepositComplete }: 
               "Deposit ETH"
             )}
           </Button>
+
+          <div className="flex items-start gap-2 p-3 bg-muted rounded-lg">
+            <AlertTriangle className="w-4 h-4 text-yellow-500 mt-0.5" />
+            <div className="text-xs text-muted-foreground">
+              <p className="font-medium mb-1">Security Notice:</p>
+              <ul className="list-disc list-inside space-y-1">
+                <li>Testnet deposits have no real value</li>
+                <li>Transactions require 3 confirmations</li>
+                <li>Only mainnet deposits are credited</li>
+              </ul>
+            </div>
+          </div>
 
           <p className="text-xs text-center text-muted-foreground">
             Network: Ethereum Mainnet & Sepolia Testnet

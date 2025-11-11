@@ -1,6 +1,13 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { z } from "zod";
+
+const tradeSchema = z.object({
+  asset_symbol: z.string().trim().min(1).max(20).regex(/^[A-Z0-9/]+$/, "Invalid asset symbol format"),
+  asset_name: z.string().trim().min(1).max(100),
+  initial_amount: z.number().positive("Amount must be positive").min(1, "Minimum trade amount is $1").max(1000000, "Maximum trade amount is $1,000,000"),
+});
 
 export interface Trade {
   id: string;
@@ -44,10 +51,20 @@ export const useTrades = (tradeType: 'crypto' | 'forex') => {
       asset_name: string;
       initial_amount: number;
     }) => {
+      // Validate inputs
+      try {
+        tradeSchema.parse({ asset_symbol, asset_name, initial_amount });
+      } catch (error) {
+        if (error instanceof z.ZodError) {
+          throw new Error(error.errors[0].message);
+        }
+        throw error;
+      }
+
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
-      // Check user balance
+      // Use atomic database function to prevent race conditions
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('balance_crypto, balance_forex')

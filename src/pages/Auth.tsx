@@ -7,6 +7,18 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
+import { z } from "zod";
+
+const authSchema = z.object({
+  email: z.string().trim().email("Invalid email address").max(255),
+  password: z.string()
+    .min(12, "Password must be at least 12 characters")
+    .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
+    .regex(/[a-z]/, "Password must contain at least one lowercase letter")
+    .regex(/[0-9]/, "Password must contain at least one number")
+    .regex(/[^A-Za-z0-9]/, "Password must contain at least one special character"),
+  fullName: z.string().trim().min(1).max(100).optional(),
+});
 
 const Auth = () => {
   const [email, setEmail] = useState("");
@@ -38,6 +50,24 @@ const Auth = () => {
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate input with zod
+    try {
+      authSchema.parse({
+        email,
+        password,
+        fullName: isLogin ? undefined : fullName,
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        toast({
+          title: "Validation Error",
+          description: error.errors[0].message,
+          variant: "destructive",
+        });
+        return;
+      }
+    }
     
     if (!isLogin && password !== confirmPassword) {
       toast({
@@ -140,9 +170,14 @@ const Auth = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                minLength={6}
-                placeholder="••••••••"
+                minLength={12}
+                placeholder="••••••••••••"
               />
+              {!isLogin && (
+                <p className="text-xs text-muted-foreground">
+                  Must be 12+ characters with uppercase, lowercase, number, and special character
+                </p>
+              )}
             </div>
             {!isLogin && (
               <div className="space-y-2">
@@ -153,8 +188,8 @@ const Auth = () => {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   required={!isLogin}
-                  minLength={6}
-                  placeholder="••••••••"
+                  minLength={12}
+                  placeholder="••••••••••••"
                 />
               </div>
             )}
