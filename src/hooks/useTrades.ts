@@ -64,49 +64,22 @@ export const useTrades = (tradeType: 'crypto' | 'forex') => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
-      // Use atomic database function to prevent race conditions
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('balance_crypto, balance_forex')
-        .eq('id', user.id)
-        .single();
-
-      if (profileError) throw profileError;
-
-      const balance = tradeType === 'crypto' ? profile.balance_crypto : profile.balance_forex;
-      if (!balance || balance < initial_amount) {
-        throw new Error('Insufficient balance');
-      }
-
       const start_time = new Date();
       const end_time = new Date(start_time.getTime() + 24 * 60 * 60 * 1000);
 
-      // Deduct balance and create trade in a transaction
-      const balanceField = tradeType === 'crypto' ? 'balance_crypto' : 'balance_forex';
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({ [balanceField]: balance - initial_amount })
-        .eq('id', user.id);
-
-      if (updateError) throw updateError;
-
-      const { data, error } = await supabase
-        .from('trades')
-        .insert({
-          user_id: user.id,
-          trade_type: tradeType,
-          asset_symbol,
-          asset_name,
-          initial_amount,
-          current_value: initial_amount,
-          start_time: start_time.toISOString(),
-          end_time: end_time.toISOString(),
-          is_active: true,
-        })
-        .select()
-        .single();
+      // Use atomic database function to prevent race conditions
+      const { data, error } = await supabase.rpc('create_trade_atomic', {
+        p_trade_type: tradeType,
+        p_asset_symbol: asset_symbol,
+        p_asset_name: asset_name,
+        p_initial_amount: initial_amount,
+        p_start_time: start_time.toISOString(),
+        p_end_time: end_time.toISOString(),
+      });
 
       if (error) throw error;
+      if (!data) throw new Error('Failed to create trade');
+      
       return data;
     },
     onSuccess: () => {

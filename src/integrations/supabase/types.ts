@@ -94,7 +94,17 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      create_trade_atomic: {
+        Args: {
+          p_asset_name: string
+          p_asset_symbol: string
+          p_end_time: string
+          p_initial_amount: number
+          p_start_time: string
+          p_trade_type: string
+        }
+        Returns: Json
+      }
     }
     Enums: {
       [_ in never]: never
