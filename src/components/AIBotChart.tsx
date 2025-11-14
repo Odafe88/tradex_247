@@ -3,6 +3,9 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { useEffect, useState } from "react";
 import { Bot, TrendingUp } from "lucide-react";
 import { Trade } from "@/hooks/useTrades";
+import { Button } from "@/components/ui/button";
+
+type TimeFrame = 'day' | 'week' | 'month';
 
 interface AIBotChartProps {
   trade: Trade;
@@ -12,6 +15,7 @@ interface AIBotChartProps {
 const AIBotChart = ({ trade, calculateCurrentValue }: AIBotChartProps) => {
   const [chartData, setChartData] = useState<{ time: string; value: number }[]>([]);
   const [currentValue, setCurrentValue] = useState(trade.initial_amount);
+  const [timeFrame, setTimeFrame] = useState<TimeFrame>('day');
 
   useEffect(() => {
     const updateChart = () => {
@@ -27,14 +31,27 @@ const AIBotChart = ({ trade, calculateCurrentValue }: AIBotChartProps) => {
       const newValue = calculateCurrentValue(trade);
       setCurrentValue(newValue);
 
+      const getTimeLabel = () => {
+        if (timeFrame === 'day') {
+          return `${Math.floor(hoursElapsed)}h`;
+        } else if (timeFrame === 'week') {
+          const daysElapsed = Math.floor(hoursElapsed / 24);
+          return `${daysElapsed}d`;
+        } else {
+          const weeksElapsed = Math.floor(hoursElapsed / (24 * 7));
+          return `${weeksElapsed}w`;
+        }
+      };
+
       const newDataPoint = {
-        time: `${Math.floor(hoursElapsed)}h`,
+        time: getTimeLabel(),
         value: parseFloat(newValue.toFixed(2)),
       };
 
       setChartData(prev => {
         const updated = [...prev, newDataPoint];
-        return updated.slice(-24);
+        const maxDataPoints = timeFrame === 'day' ? 24 : timeFrame === 'week' ? 168 : 720;
+        return updated.slice(-maxDataPoints);
       });
     };
 
@@ -42,7 +59,7 @@ const AIBotChart = ({ trade, calculateCurrentValue }: AIBotChartProps) => {
     const interval = setInterval(updateChart, 60000); // Update every minute
 
     return () => clearInterval(interval);
-  }, [trade, calculateCurrentValue]);
+  }, [trade, calculateCurrentValue, timeFrame]);
 
   const profit = currentValue - trade.initial_amount;
   const profitPercentage = ((profit / trade.initial_amount) * 100).toFixed(2);
@@ -81,6 +98,30 @@ const AIBotChart = ({ trade, calculateCurrentValue }: AIBotChartProps) => {
             <p className="text-sm text-muted-foreground">Time Left</p>
             <p className="text-lg font-bold">{hoursRemaining}h</p>
           </div>
+        </div>
+
+        <div className="flex gap-2 mb-6">
+          <Button
+            variant={timeFrame === 'day' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setTimeFrame('day')}
+          >
+            Day
+          </Button>
+          <Button
+            variant={timeFrame === 'week' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setTimeFrame('week')}
+          >
+            Week
+          </Button>
+          <Button
+            variant={timeFrame === 'month' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setTimeFrame('month')}
+          >
+            Month
+          </Button>
         </div>
 
         <div className="h-[300px]">
