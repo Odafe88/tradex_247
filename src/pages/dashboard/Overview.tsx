@@ -14,6 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useCryptoData } from "@/hooks/useCryptoData";
 import { useToast } from "@/hooks/use-toast";
 import { WalletConnectDeposit } from "@/components/WalletConnectDeposit";
+import { PortfolioTracker } from "@/components/PortfolioTracker";
 
 const chartData = [
   { time: "2:00pm", btc: 8420, eth: 2980 },
@@ -39,6 +40,7 @@ const Overview = () => {
   const [balanceCrypto, setBalanceCrypto] = useState(0);
   const [balanceForex, setBalanceForex] = useState(0);
   const [totalProfit, setTotalProfit] = useState(0);
+  const [totalDeposited, setTotalDeposited] = useState(0);
   const [depositOpen, setDepositOpen] = useState(false);
   const [withdrawOpen, setWithdrawOpen] = useState(false);
   const [cryptoDepositOpen, setCryptoDepositOpen] = useState(false);
@@ -60,9 +62,31 @@ const Overview = () => {
         
         if (profile) {
           setFullName(profile.full_name || "");
-          setBalanceCrypto(Number(profile.balance_crypto) || 0);
-          setBalanceForex(Number(profile.balance_forex) || 0);
-          setTotalProfit(Number(profile.total_profit) || 0);
+          const cryptoBal = Number(profile.balance_crypto) || 0;
+          const forexBal = Number(profile.balance_forex) || 0;
+          const profit = Number(profile.total_profit) || 0;
+          
+          setBalanceCrypto(cryptoBal);
+          setBalanceForex(forexBal);
+          setTotalProfit(profit);
+          
+          // Calculate total deposited (current balances + profit from trades)
+          // This assumes initial deposit = current balance + active trade amounts - profit
+          const currentPortfolio = cryptoBal + forexBal;
+          
+          // Get value locked in active trades
+          const { data: activeTrades } = await supabase
+            .from('trades')
+            .select('initial_amount')
+            .eq('user_id', user.id)
+            .eq('is_active', true);
+          
+          const activeTradeValue = activeTrades?.reduce((sum, trade) => 
+            sum + Number(trade.initial_amount), 0) || 0;
+          
+          // Total deposited = current balance + active trades - profit earned
+          const deposited = currentPortfolio + activeTradeValue - profit;
+          setTotalDeposited(Math.max(0, deposited));
         }
       }
     };
@@ -349,52 +373,10 @@ const Overview = () => {
 
       {/* Main Content */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Active Trade Chart */}
-        <Card className="lg:col-span-2">
-          <CardHeader>
-            <CardTitle>Active Trade</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[250px] md:h-[300px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={chartData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis 
-                    dataKey="time" 
-                    stroke="hsl(var(--muted-foreground))"
-                    style={{ fontSize: '12px' }}
-                  />
-                  <YAxis 
-                    stroke="hsl(var(--muted-foreground))"
-                    style={{ fontSize: '12px' }}
-                  />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: 'hsl(var(--card))',
-                      border: '1px solid hsl(var(--border))',
-                      borderRadius: '8px',
-                    }}
-                  />
-                  <Legend />
-                  <Line
-                    type="monotone"
-                    dataKey="btc"
-                    stroke="#4ADE80"
-                    strokeWidth={2}
-                    dot={{ fill: '#4ADE80' }}
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="eth"
-                    stroke="hsl(var(--primary))"
-                    strokeWidth={2}
-                    dot={{ fill: 'hsl(var(--primary))' }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
+        {/* Portfolio Tracker */}
+        <div className="lg:col-span-2">
+          <PortfolioTracker />
+        </div>
 
         {/* Profit Percentage */}
         <Card>
@@ -415,16 +397,22 @@ const Overview = () => {
                     cx="50%"
                     cy="50%"
                     r="35%"
-                    stroke="#4ADE80"
+                    stroke={totalProfit >= 0 ? "#4ADE80" : "#EF4444"}
                     strokeWidth="12"
                     fill="none"
-                    strokeDasharray={`${(totalProfit > 0 ? Math.min(totalProfit, 100) : 0) * 2.2} ${100 * 2.2}`}
+                    strokeDasharray={`${Math.min(Math.abs(totalDeposited > 0 ? (totalProfit / totalDeposited) * 100 : 0), 100) * 2.2} ${100 * 2.2}`}
                     strokeLinecap="round"
                   />
                 </svg>
                 <div className="absolute inset-0 flex items-center justify-center flex-col">
-                <div className="text-2xl md:text-4xl font-bold">
-                  {totalProfit.toFixed(0)}%
+                <div className={cn(
+                  "text-2xl md:text-4xl font-bold",
+                  totalProfit >= 0 ? "text-green-500" : "text-red-500"
+                )}>
+                  {totalDeposited > 0 
+                    ? `${totalProfit >= 0 ? '+' : ''}${((totalProfit / totalDeposited) * 100).toFixed(1)}%`
+                    : '0%'
+                  }
                 </div>
                 </div>
               </div>
@@ -432,7 +420,7 @@ const Overview = () => {
             <div className="text-center">
               <div className="text-sm">Profit margin</div>
               <div className={cn("text-xs mt-1", totalProfit >= 0 ? "text-primary" : "text-destructive")}>
-                {totalProfit >= 0 ? "↑" : "↓"} Lifetime
+                {totalProfit >= 0 ? "↑" : "↓"} ${Math.abs(totalProfit).toFixed(2)} Lifetime
               </div>
             </div>
           </CardContent>
