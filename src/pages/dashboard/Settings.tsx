@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
@@ -243,9 +244,8 @@ const Settings = () => {
             <form onSubmit={passwordForm.handleSubmit(onPasswordSubmit)} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="new-password">New Password</Label>
-                <Input 
+                <PasswordInput 
                   id="new-password" 
-                  type="password" 
                   {...passwordForm.register("newPassword")}
                   className="bg-background border-border" 
                 />
@@ -257,9 +257,8 @@ const Settings = () => {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="confirm-password">Confirm Password</Label>
-                <Input 
+                <PasswordInput 
                   id="confirm-password" 
-                  type="password" 
                   {...passwordForm.register("confirmPassword")}
                   className="bg-background border-border" 
                 />
