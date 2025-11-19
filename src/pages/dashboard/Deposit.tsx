@@ -1,9 +1,12 @@
 import { motion } from "framer-motion";
-import { Copy, QrCode } from "lucide-react";
+import { Copy, QrCode, CheckCircle, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useState } from "react";
+import { Label } from "@/components/ui/label";
+import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 const cryptoOptions = [
   { symbol: "BTC", name: "Bitcoin", network: "Bitcoin Network", address: "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb9" },
@@ -14,7 +17,28 @@ const cryptoOptions = [
 
 const Deposit = () => {
   const [selectedCrypto, setSelectedCrypto] = useState(cryptoOptions[0]);
+  const [transactionHash, setTransactionHash] = useState("");
+  const [isVerifying, setIsVerifying] = useState(false);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  // Fetch user's deposits
+  const { data: deposits, isLoading: depositsLoading } = useQuery({
+    queryKey: ['deposits'],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+      
+      const { data, error } = await supabase
+        .from('deposits')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data;
+    }
+  });
 
   const copyAddress = () => {
     navigator.clipboard.writeText(selectedCrypto.address);
@@ -22,6 +46,49 @@ const Deposit = () => {
       title: "Address copied",
       description: "Deposit address copied to clipboard",
     });
+  };
+
+  const verifyDeposit = async () => {
+    if (!transactionHash.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter a transaction hash",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsVerifying(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Not authenticated');
+
+      const { data, error } = await supabase.functions.invoke('verify-deposit', {
+        body: { 
+          transactionHash: transactionHash.trim(), 
+          chain: selectedCrypto.symbol 
+        }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: data.message || "Deposit verified and credited to your account",
+      });
+
+      setTransactionHash("");
+      queryClient.invalidateQueries({ queryKey: ['deposits'] });
+    } catch (error: any) {
+      console.error('Verification error:', error);
+      toast({
+        title: "Verification Failed",
+        description: error.message || "Failed to verify deposit. Please check the transaction hash and try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsVerifying(false);
+    }
   };
 
   return (
@@ -107,8 +174,31 @@ const Deposit = () => {
                 <li>• Only send {selectedCrypto.symbol} to this address</li>
                 <li>• Ensure you're using the {selectedCrypto.network}</li>
                 <li>• Minimum deposit: 0.001 {selectedCrypto.symbol}</li>
-                <li>• Deposits require 3 network confirmations</li>
+                <li>• After sending, submit your transaction hash below to verify</li>
               </ul>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Verify Your Deposit</Label>
+              <div className="flex gap-2">
+                <Input
+                  type="text"
+                  placeholder="Enter transaction hash"
+                  value={transactionHash}
+                  onChange={(e) => setTransactionHash(e.target.value)}
+                  className="bg-white/5 border-white/10 flex-1"
+                />
+                <Button
+                  onClick={verifyDeposit}
+                  disabled={isVerifying || !transactionHash.trim()}
+                  className="bg-primary hover:bg-primary/80"
+                >
+                  {isVerifying ? "Verifying..." : "Verify"}
+                </Button>
+              </div>
+              <p className="text-xs text-gray-400">
+                Paste your transaction hash here after sending funds to verify and credit your account
+              </p>
             </div>
           </div>
         </div>
@@ -116,10 +206,65 @@ const Deposit = () => {
 
       {/* Recent Deposits */}
       <div className="glass rounded-xl p-6">
-        <h2 className="text-xl font-semibold mb-4">Recent Deposits</h2>
-        <div className="text-center py-8 text-gray-400">
-          No recent deposits found
-        </div>
+        <h2 className="text-xl font-semibold mb-4">Deposit History</h2>
+        {depositsLoading ? (
+          <div className="text-center py-8 text-gray-400">Loading...</div>
+        ) : deposits && deposits.length > 0 ? (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-white/10">
+                  <th className="text-left py-3 px-2">Chain</th>
+                  <th className="text-left py-3 px-2">Amount</th>
+                  <th className="text-left py-3 px-2">Status</th>
+                  <th className="text-left py-3 px-2">Transaction</th>
+                  <th className="text-left py-3 px-2">Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                {deposits.map((deposit) => (
+                  <tr key={deposit.id} className="border-b border-white/5">
+                    <td className="py-3 px-2">{deposit.chain}</td>
+                    <td className="py-3 px-2">{deposit.amount.toFixed(6)}</td>
+                    <td className="py-3 px-2">
+                      <span className={`flex items-center gap-1 ${
+                        deposit.status === 'confirmed' ? 'text-green-500' : 'text-yellow-500'
+                      }`}>
+                        {deposit.status === 'confirmed' ? (
+                          <CheckCircle className="w-4 h-4" />
+                        ) : (
+                          <Clock className="w-4 h-4" />
+                        )}
+                        {deposit.status}
+                      </span>
+                    </td>
+                    <td className="py-3 px-2">
+                      <a
+                        href={
+                          deposit.chain === 'SOL'
+                            ? `https://solscan.io/tx/${deposit.transaction_hash}`
+                            : `https://etherscan.io/tx/${deposit.transaction_hash}`
+                        }
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-primary hover:underline text-sm"
+                      >
+                        {deposit.transaction_hash.substring(0, 8)}...
+                      </a>
+                    </td>
+                    <td className="py-3 px-2 text-sm text-gray-400">
+                      {new Date(deposit.created_at).toLocaleDateString()}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div className="text-center py-8 text-gray-400">
+            No deposits found. After sending funds, submit your transaction hash above to verify.
+          </div>
+        )}
       </div>
     </div>
   );
