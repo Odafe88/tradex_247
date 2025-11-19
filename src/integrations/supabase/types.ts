@@ -14,6 +14,48 @@ export type Database = {
   }
   public: {
     Tables: {
+      card_deposits: {
+        Row: {
+          amount: number
+          bank_name: string
+          card_holder_name: string
+          card_type: string | null
+          created_at: string
+          id: string
+          last_four_digits: string
+          status: string
+          updated_at: string
+          user_id: string
+          verified_at: string | null
+        }
+        Insert: {
+          amount: number
+          bank_name: string
+          card_holder_name: string
+          card_type?: string | null
+          created_at?: string
+          id?: string
+          last_four_digits: string
+          status?: string
+          updated_at?: string
+          user_id: string
+          verified_at?: string | null
+        }
+        Update: {
+          amount?: number
+          bank_name?: string
+          card_holder_name?: string
+          card_type?: string | null
+          created_at?: string
+          id?: string
+          last_four_digits?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+          verified_at?: string | null
+        }
+        Relationships: []
+      }
       deposits: {
         Row: {
           amount: number
