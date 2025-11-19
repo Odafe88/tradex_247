@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      deposits: {
+        Row: {
+          amount: number
+          chain: string
+          created_at: string
+          id: string
+          status: string
+          transaction_hash: string
+          updated_at: string
+          user_id: string
+          verified_at: string | null
+          wallet_address: string
+        }
+        Insert: {
+          amount: number
+          chain: string
+          created_at?: string
+          id?: string
+          status?: string
+          transaction_hash: string
+          updated_at?: string
+          user_id: string
+          verified_at?: string | null
+          wallet_address: string
+        }
+        Update: {
+          amount?: number
+          chain?: string
+          created_at?: string
+          id?: string
+          status?: string
+          transaction_hash?: string
+          updated_at?: string
+          user_id?: string
+          verified_at?: string | null
+          wallet_address?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           balance_crypto: number | null
