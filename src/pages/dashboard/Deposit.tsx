@@ -6,19 +6,18 @@ import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 
 const cryptoOptions = [
-  { symbol: "BTC", name: "Bitcoin", network: "Bitcoin Network" },
-  { symbol: "ETH", name: "Ethereum", network: "Ethereum (ERC20)" },
-  { symbol: "USDT", name: "Tether", network: "Ethereum (ERC20)" },
-  { symbol: "SOL", name: "Solana", network: "Solana Network" },
+  { symbol: "BTC", name: "Bitcoin", network: "Bitcoin Network", address: "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb9" },
+  { symbol: "ETH", name: "Ethereum", network: "Ethereum (ERC20)", address: "0x504b5de09385b6b776baab7076a08d7cc34f3217" },
+  { symbol: "USDT", name: "Tether", network: "Ethereum (ERC20)", address: "0x504b5de09385b6b776baab7076a08d7cc34f3217" },
+  { symbol: "SOL", name: "Solana", network: "Solana Network", address: "33qzZwAYnz8GDGcoYWAyxhGQQ1pnFwQtM9SJwodPiu9L" },
 ];
 
 const Deposit = () => {
   const [selectedCrypto, setSelectedCrypto] = useState(cryptoOptions[0]);
   const { toast } = useToast();
-  const depositAddress = "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb9";
 
   const copyAddress = () => {
-    navigator.clipboard.writeText(depositAddress);
+    navigator.clipboard.writeText(selectedCrypto.address);
     toast({
       title: "Address copied",
       description: "Deposit address copied to clipboard",
@@ -80,7 +79,7 @@ const Deposit = () => {
               </label>
               <div className="flex gap-2">
                 <Input
-                  value={depositAddress}
+                  value={selectedCrypto.address}
                   disabled
                   className="bg-white/5 border-white/10 flex-1"
                 />
