@@ -15,6 +15,7 @@ import { useCryptoData } from "@/hooks/useCryptoData";
 import { useToast } from "@/hooks/use-toast";
 import { WalletConnectDeposit } from "@/components/WalletConnectDeposit";
 import { PortfolioTracker } from "@/components/PortfolioTracker";
+import { CardDepositDialog } from "@/components/CardDepositDialog";
 
 const chartData = [
   { time: "2:00pm", btc: 8420, eth: 2980 },
@@ -44,6 +45,7 @@ const Overview = () => {
   const [depositOpen, setDepositOpen] = useState(false);
   const [withdrawOpen, setWithdrawOpen] = useState(false);
   const [cryptoDepositOpen, setCryptoDepositOpen] = useState(false);
+  const [cardDepositOpen, setCardDepositOpen] = useState(false);
   const [depositWallet, setDepositWallet] = useState("crypto");
   const [withdrawWallet, setWithdrawWallet] = useState("crypto");
   const [depositAmount, setDepositAmount] = useState("");
@@ -229,8 +231,15 @@ const Overview = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Button onClick={handleDeposit} className="w-full">
-                    Deposit (Demo)
+                  <Button 
+                    onClick={() => {
+                      setDepositOpen(false);
+                      setCardDepositOpen(true);
+                    }}
+                    className="w-full gap-2"
+                  >
+                    <Wallet className="w-4 h-4" />
+                    Deposit with Card
                   </Button>
                   <Button 
                     onClick={() => {
@@ -252,6 +261,11 @@ const Overview = () => {
             open={cryptoDepositOpen}
             onOpenChange={setCryptoDepositOpen}
             onDepositComplete={handleCryptoDeposit}
+          />
+
+          <CardDepositDialog
+            open={cardDepositOpen}
+            onOpenChange={setCardDepositOpen}
           />
           
           <Dialog open={withdrawOpen} onOpenChange={setWithdrawOpen}>
