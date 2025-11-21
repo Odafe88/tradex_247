@@ -41,23 +41,27 @@ const metadata = {
   icons: ['https://avatars.githubusercontent.com/u/37784886']
 };
 
-// Create ethers config
+// Create ethers config - Disable Coinbase to prevent cross-origin errors in iframe
 const ethersConfig = defaultConfig({
   metadata,
   enableEIP6963: true,
   enableInjected: true,
-  enableCoinbase: true,
+  enableCoinbase: false, // Disabled to prevent cross-origin issues in iframe environments
   rpcUrl: mainnet.rpcUrl,
   defaultChainId: 1
 });
 
-// Create Web3Modal
-createWeb3Modal({
-  ethersConfig,
-  chains: [mainnet, sepolia],
-  projectId,
-  enableAnalytics: true
-});
+// Create Web3Modal with error handling
+try {
+  createWeb3Modal({
+    ethersConfig,
+    chains: [mainnet, sepolia],
+    projectId,
+    enableAnalytics: true
+  });
+} catch (error) {
+  console.warn('Web3Modal initialization warning:', error);
+}
 
 interface WalletConnectDepositProps {
   open: boolean;
