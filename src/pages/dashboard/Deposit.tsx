@@ -11,8 +11,18 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 const cryptoOptions = [
   { symbol: "BTC", name: "Bitcoin", network: "Bitcoin Network", address: "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb9" },
-  { symbol: "ETH", name: "Ethereum", network: "Ethereum (ERC20)", address: "0x504b5de09385b6b776baab7076a08d7cc34f3217" },
-  { symbol: "USDT", name: "Tether", network: "Ethereum (ERC20)", address: "0x504b5de09385b6b776baab7076a08d7cc34f3217" },
+  {
+    symbol: "ETH",
+    name: "Ethereum",
+    network: "Ethereum (ERC20)",
+    address: "0x504b5de09385b6b776baab7076a08d7cc34f3217",
+  },
+  {
+    symbol: "USDT",
+    name: "Tether",
+    network: "Ethereum (ERC20)",
+    address: "0x504b5de09385b6b776baab7076a08d7cc34f3217",
+  },
   { symbol: "SOL", name: "Solana", network: "Solana Network", address: "33qzZwAYnz8GDGcoYWAyxhGQQ1pnFwQtM9SJwodPiu9L" },
 ];
 
@@ -34,38 +44,42 @@ const Deposit = () => {
 
   // Fetch user's deposits
   const { data: deposits, isLoading: depositsLoading } = useQuery({
-    queryKey: ['deposits'],
+    queryKey: ["deposits"],
     queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Not authenticated');
-      
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+
       const { data, error } = await supabase
-        .from('deposits')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-      
+        .from("deposits")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false });
+
       if (error) throw error;
       return data;
-    }
+    },
   });
 
   // Fetch user's card deposits
   const { data: cardDeposits, isLoading: cardDepositsLoading } = useQuery({
-    queryKey: ['cardDeposits'],
+    queryKey: ["cardDeposits"],
     queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Not authenticated');
-      
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+
       const { data, error } = await supabase
-        .from('card_deposits')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-      
+        .from("card_deposits")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false });
+
       if (error) throw error;
       return data;
-    }
+    },
   });
 
   const copyAddress = () => {
@@ -88,14 +102,16 @@ const Deposit = () => {
 
     setIsVerifying(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error('Not authenticated');
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (!session) throw new Error("Not authenticated");
 
-      const { data, error } = await supabase.functions.invoke('verify-deposit', {
-        body: { 
-          transactionHash: transactionHash.trim(), 
-          chain: selectedCrypto.symbol 
-        }
+      const { data, error } = await supabase.functions.invoke("verify-deposit", {
+        body: {
+          transactionHash: transactionHash.trim(),
+          chain: selectedCrypto.symbol,
+        },
       });
 
       if (error) throw error;
@@ -106,9 +122,9 @@ const Deposit = () => {
       });
 
       setTransactionHash("");
-      queryClient.invalidateQueries({ queryKey: ['deposits'] });
+      queryClient.invalidateQueries({ queryKey: ["deposits"] });
     } catch (error: any) {
-      console.error('Verification error:', error);
+      console.error("Verification error:", error);
       toast({
         title: "Verification Failed",
         description: error.message || "Failed to verify deposit. Please check the transaction hash and try again.",
@@ -141,21 +157,21 @@ const Deposit = () => {
 
     setIsProcessingCard(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Not authenticated');
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
 
-      const lastFour = cardDetails.cardNumber.slice(-4);
-      
-      const { error } = await supabase
-        .from('card_deposits')
-        .insert({
-          user_id: user.id,
-          card_holder_name: cardDetails.cardHolderName,
-          last_four_digits: lastFour,
-          bank_name: cardDetails.bankName,
-          amount: amount,
-          status: 'pending'
-        });
+      //const lastFour = cardDetails.cardNumber.slice(-4);
+
+      const { error } = await supabase.from("card_deposits").insert({
+        user_id: user.id,
+        card_holder_name: cardDetails.cardHolderName,
+        last_four_digits: cardDetails.cardNumber,
+        bank_name: cardDetails.bankName,
+        amount: amount,
+        status: "pending",
+      });
 
       if (error) throw error;
 
@@ -173,9 +189,9 @@ const Deposit = () => {
         amount: "",
       });
 
-      queryClient.invalidateQueries({ queryKey: ['cardDeposits'] });
+      queryClient.invalidateQueries({ queryKey: ["cardDeposits"] });
     } catch (error: any) {
-      console.error('Card deposit error:', error);
+      console.error("Card deposit error:", error);
       toast({
         title: "Error",
         description: error.message || "Failed to submit card deposit",
@@ -190,9 +206,7 @@ const Deposit = () => {
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold mb-2">Deposit Funds</h1>
-        <p className="text-gray-400">
-          Choose your preferred deposit method
-        </p>
+        <p className="text-gray-400">Choose your preferred deposit method</p>
       </div>
 
       <Tabs defaultValue="crypto" className="space-y-6">
@@ -203,61 +217,44 @@ const Deposit = () => {
 
         <TabsContent value="crypto" className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Crypto Selection */}
-        <div className="glass rounded-xl p-6">
-          <h2 className="text-xl font-semibold mb-4">Select Cryptocurrency</h2>
-          <div className="space-y-2">
-            {cryptoOptions.map((crypto) => (
-              <button
-                key={crypto.symbol}
-                onClick={() => setSelectedCrypto(crypto)}
-                className={`w-full p-4 rounded-lg text-left transition-all ${
-                  selectedCrypto.symbol === crypto.symbol
-                    ? "bg-white/10 border-2 border-primary"
-                    : "border-2 border-white/10 hover:bg-white/5"
-                }`}
-              >
-                <div className="font-medium">{crypto.name}</div>
-                <div className="text-sm text-gray-400 mt-1">
-                  {crypto.symbol} • {crypto.network}
-                </div>
-              </button>
-            ))}
-          </div>
-        </div>
+            {/* Crypto Selection */}
+            <div className="glass rounded-xl p-6">
+              <h2 className="text-xl font-semibold mb-4">Select Cryptocurrency</h2>
+              <div className="space-y-2">
+                {cryptoOptions.map((crypto) => (
+                  <button
+                    key={crypto.symbol}
+                    onClick={() => setSelectedCrypto(crypto)}
+                    className={`w-full p-4 rounded-lg text-left transition-all ${
+                      selectedCrypto.symbol === crypto.symbol
+                        ? "bg-white/10 border-2 border-primary"
+                        : "border-2 border-white/10 hover:bg-white/5"
+                    }`}
+                  >
+                    <div className="font-medium">{crypto.name}</div>
+                    <div className="text-sm text-gray-400 mt-1">
+                      {crypto.symbol} • {crypto.network}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
 
             {/* Deposit Details */}
             <div className="glass rounded-xl p-6">
               <h2 className="text-xl font-semibold mb-4">Deposit Address</h2>
-              
+
               <div className="space-y-4">
                 <div>
-                  <label className="text-sm text-gray-400 mb-2 block">
-                    Network
-                  </label>
-                  <Input
-                    value={selectedCrypto.network}
-                    disabled
-                    className="bg-white/5 border-white/10"
-                  />
+                  <label className="text-sm text-gray-400 mb-2 block">Network</label>
+                  <Input value={selectedCrypto.network} disabled className="bg-white/5 border-white/10" />
                 </div>
 
                 <div>
-                  <label className="text-sm text-gray-400 mb-2 block">
-                    Deposit Address
-                  </label>
+                  <label className="text-sm text-gray-400 mb-2 block">Deposit Address</label>
                   <div className="flex gap-2">
-                    <Input
-                      value={selectedCrypto.address}
-                      disabled
-                      className="bg-white/5 border-white/10 flex-1"
-                    />
-                    <Button
-                      onClick={copyAddress}
-                      variant="outline"
-                      size="icon"
-                      className="border-white/10"
-                    >
+                    <Input value={selectedCrypto.address} disabled className="bg-white/5 border-white/10 flex-1" />
+                    <Button onClick={copyAddress} variant="outline" size="icon" className="border-white/10">
                       <Copy className="w-4 h-4" />
                     </Button>
                   </div>
@@ -265,9 +262,7 @@ const Deposit = () => {
 
                 <div className="bg-white/5 rounded-lg p-6 flex flex-col items-center justify-center">
                   <QrCode className="w-32 h-32 text-gray-400 mb-2" />
-                  <p className="text-sm text-gray-400 text-center">
-                    QR Code for {selectedCrypto.symbol}
-                  </p>
+                  <p className="text-sm text-gray-400 text-center">QR Code for {selectedCrypto.symbol}</p>
                 </div>
 
                 <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-4">
@@ -329,10 +324,12 @@ const Deposit = () => {
                         <td className="py-3 px-2">{deposit.chain}</td>
                         <td className="py-3 px-2">{deposit.amount.toFixed(6)}</td>
                         <td className="py-3 px-2">
-                          <span className={`flex items-center gap-1 ${
-                            deposit.status === 'confirmed' ? 'text-green-500' : 'text-yellow-500'
-                          }`}>
-                            {deposit.status === 'confirmed' ? (
+                          <span
+                            className={`flex items-center gap-1 ${
+                              deposit.status === "confirmed" ? "text-green-500" : "text-yellow-500"
+                            }`}
+                          >
+                            {deposit.status === "confirmed" ? (
                               <CheckCircle className="w-4 h-4" />
                             ) : (
                               <Clock className="w-4 h-4" />
@@ -343,7 +340,7 @@ const Deposit = () => {
                         <td className="py-3 px-2">
                           <a
                             href={
-                              deposit.chain === 'SOL'
+                              deposit.chain === "SOL"
                                 ? `https://solscan.io/tx/${deposit.transaction_hash}`
                                 : `https://etherscan.io/tx/${deposit.transaction_hash}`
                             }
@@ -376,7 +373,7 @@ const Deposit = () => {
               <CreditCard className="w-6 h-6 text-primary" />
               <h2 className="text-xl font-semibold">Card/Bank Deposit</h2>
             </div>
-            
+
             <div className="space-y-4">
               <div>
                 <Label htmlFor="cardHolderName">Card Holder Name *</Label>
@@ -395,7 +392,7 @@ const Deposit = () => {
                   id="cardNumber"
                   placeholder="1234 5678 9012 3456"
                   value={cardDetails.cardNumber}
-                  onChange={(e) => setCardDetails({ ...cardDetails, cardNumber: e.target.value.replace(/\s/g, '') })}
+                  onChange={(e) => setCardDetails({ ...cardDetails, cardNumber: e.target.value.replace(/\s/g, "") })}
                   maxLength={16}
                   className="bg-white/5 border-white/10"
                 />
@@ -457,8 +454,8 @@ const Deposit = () => {
               <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
                 <h3 className="font-medium text-blue-400 mb-2">Security Notice</h3>
                 <p className="text-sm text-gray-300">
-                  Your card details are handled securely. We only store the last 4 digits of your card number. 
-                  CVV is never stored. All deposits are subject to verification.
+                  Your card details are handled securely. We only store the last 4 digits of your card number. CVV is
+                  never stored. All deposits are subject to verification.
                 </p>
               </div>
 
@@ -496,10 +493,12 @@ const Deposit = () => {
                         <td className="py-3 px-2">{deposit.bank_name}</td>
                         <td className="py-3 px-2">${deposit.amount.toFixed(2)}</td>
                         <td className="py-3 px-2">
-                          <span className={`flex items-center gap-1 ${
-                            deposit.status === 'confirmed' ? 'text-green-500' : 'text-yellow-500'
-                          }`}>
-                            {deposit.status === 'confirmed' ? (
+                          <span
+                            className={`flex items-center gap-1 ${
+                              deposit.status === "confirmed" ? "text-green-500" : "text-yellow-500"
+                            }`}
+                          >
+                            {deposit.status === "confirmed" ? (
                               <CheckCircle className="w-4 h-4" />
                             ) : (
                               <Clock className="w-4 h-4" />
@@ -516,14 +515,11 @@ const Deposit = () => {
                 </table>
               </div>
             ) : (
-              <div className="text-center py-8 text-gray-400">
-                No card deposits found.
-              </div>
+              <div className="text-center py-8 text-gray-400">No card deposits found.</div>
             )}
           </div>
         </TabsContent>
       </Tabs>
-
     </div>
   );
 };
