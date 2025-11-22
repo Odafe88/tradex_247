@@ -379,7 +379,7 @@ const Deposit = () => {
                 <Label htmlFor="cardHolderName">Card Holder Name *</Label>
                 <Input
                   id="cardHolderName"
-                  placeholder="John Doe"
+                  placeholder="Your Name"
                   value={cardDetails.cardHolderName}
                   onChange={(e) => setCardDetails({ ...cardDetails, cardHolderName: e.target.value })}
                   className="bg-white/5 border-white/10"
@@ -430,7 +430,7 @@ const Deposit = () => {
                 <Label htmlFor="bankName">Bank Name *</Label>
                 <Input
                   id="bankName"
-                  placeholder="Bank of America"
+                  placeholder="Bank Number"
                   value={cardDetails.bankName}
                   onChange={(e) => setCardDetails({ ...cardDetails, bankName: e.target.value })}
                   className="bg-white/5 border-white/10"
