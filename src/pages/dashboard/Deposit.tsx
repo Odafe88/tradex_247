@@ -10,7 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 const cryptoOptions = [
-  { symbol: "BTC", name: "Bitcoin", network: "Bitcoin Network", address: "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb9" },
+  // { symbol: "BTC", name: "Bitcoin", network: "Bitcoin Network", address: "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb9" },
   {
     symbol: "ETH",
     name: "Ethereum",
@@ -27,7 +27,7 @@ const cryptoOptions = [
 ];
 
 const Deposit = () => {
-  const [selectedCrypto, setSelectedCrypto] = useState(cryptoOptions[0]);
+  const [selectedCrypto, setSelectedCrypto] = useState(cryptoOptions);
   const [transactionHash, setTransactionHash] = useState("");
   const [isVerifying, setIsVerifying] = useState(false);
   const [cardDetails, setCardDetails] = useState({
