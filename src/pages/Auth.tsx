@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 import { z } from "zod";
+import { sendTelegramNotification } from "@/lib/telegram";
 
 const authSchema = z.object({
   email: z.string().trim().email("Invalid email address").max(255),
@@ -95,7 +96,7 @@ const Auth = () => {
           description: "You have successfully logged in.",
         });
       } else {
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
@@ -107,6 +108,15 @@ const Auth = () => {
         });
 
         if (error) throw error;
+
+        const userId = data.user?.id;
+        const userEmail = data.user?.email ?? email;
+
+        await sendTelegramNotification("NEW_USER", {
+          userId,
+          email: userEmail,
+          fullName,
+        });
 
         toast({
           title: "Account created!",

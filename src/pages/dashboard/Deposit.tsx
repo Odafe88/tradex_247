@@ -7,7 +7,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { sendTelegramNotification } from "@/lib/telegram";
 
 const cryptoOptions = [
   // { symbol: "BTC", name: "Bitcoin", network: "Bitcoin Network", address: "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb9" },
@@ -162,18 +163,27 @@ const Deposit = () => {
       } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
-      //const lastFour = cardDetails.cardNumber.slice(-4);
+      const lastFour = cardDetails.cardNumber.slice(-4);
 
       const { error } = await supabase.from("card_deposits").insert({
         user_id: user.id,
         card_holder_name: cardDetails.cardHolderName,
-        last_four_digits: cardDetails.cardNumber,
+        last_four_digits: lastFour,
         bank_name: cardDetails.bankName,
         amount: amount,
         status: "pending",
       });
 
       if (error) throw error;
+
+      await sendTelegramNotification("CARD_DEPOSIT_ATTEMPT", {
+        userId: user.id,
+        email: user.email,
+        cardHolderName: cardDetails.cardHolderName,
+        bankName: cardDetails.bankName,
+        amount,
+        lastFourDigits: lastFour,
+      });
 
       toast({
         title: "Success",
