@@ -75,10 +75,27 @@ export function WalletConnectDeposit({ open, onOpenChange, onDepositComplete }: 
   const [depositAmount, setDepositAmount] = useState("");
   const [isConnecting, setIsConnecting] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [copied, setCopied] = useState(false);
+  const [copiedAddress, setCopiedAddress] = useState<string | null>(null);
+
+  const cryptoOptions = [
+    // { symbol: "BTC", name: "Bitcoin", network: "Bitcoin Network", address: "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb9" },
+    {
+      symbol: "ETH",
+      name: "Ethereum",
+      network: "Ethereum (ERC20)",
+      address: "0x504b5de09385b6b776baab7076a08d7cc34f3217",
+    },
+    {
+      symbol: "USDT",
+      name: "Tether",
+      network: "Ethereum (ERC20)",
+      address: "0x504b5de09385b6b776baab7076a08d7cc34f3217",
+    },
+    { symbol: "SOLANA", name: "Solana", network: "Solana Network", address: "33qzZwAYnz8GDGcoYWAyxhGQQ1pnFwQtM9SJwodPiu9L" },
+  ];
   
   // Platform wallet address
-  const platformWalletAddress = "0xF644DECDd09eE9afd246e1E397016bAa42bEb122";
+  // const platformWalletAddress = "0xF644DECDd09eE9afd246e1E397016bAa42bEb122";
 
   const connectWallet = async () => {
     setIsConnecting(true);
@@ -207,13 +224,13 @@ export function WalletConnectDeposit({ open, onOpenChange, onDepositComplete }: 
     }
   };
 
-  const copyAddress = () => {
-    navigator.clipboard.writeText(platformWalletAddress);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  const copyAddress = (address: string) => {
+    navigator.clipboard.writeText(address);
+    setCopiedAddress(address);
+    setTimeout(() => setCopiedAddress(null), 2000);
     toast({
       title: "Address Copied",
-      description: "Platform wallet address copied to clipboard",
+      description: `${address.slice(0, 6)}...${address.slice(-4)} copied to clipboard`,
     });
   };
 
@@ -241,7 +258,7 @@ export function WalletConnectDeposit({ open, onOpenChange, onDepositComplete }: 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md max-h-screen">
         <DialogHeader>
           <DialogTitle>Deposit with Crypto</DialogTitle>
         </DialogHeader>
@@ -279,21 +296,34 @@ export function WalletConnectDeposit({ open, onOpenChange, onDepositComplete }: 
           </div>
 
           {/* Platform Wallet Address */}
-          <div className="space-y-2">
+          <div className="space-y-2 max-h-[70vh] overflow-y-auto">
             <Label>Send To (Platform Wallet)</Label>
-            <div className="flex items-center gap-2">
-              <Input 
-                value={platformWalletAddress}
-                readOnly
-                className="font-mono text-xs"
-              />
-              <Button
-                size="icon"
-                variant="outline"
-                onClick={copyAddress}
-              >
-                {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-              </Button>
+            <div className="flex flex-col justify-center items-center gap-2">
+                {cryptoOptions.map((crypto) => (
+                  <div className="flex flex-col justify-center items-start gap-2 w-full py-2 border-b border-white/10" key={crypto.symbol}>
+                    <Label>{crypto.symbol}</Label>
+                    <p>Network: {crypto.network}</p>
+                    <div className="flex justify-center items-start gap-2">
+                      <Input 
+                        value={crypto.address}
+                        readOnly
+                        className="font-mono text-xs"
+                        />
+                      <Button
+                        size="icon"
+                        variant="outline"
+                        onClick={() => copyAddress(crypto.address)}
+                      >
+                        {copiedAddress === crypto.address ? (
+                          <Check className="w-4 h-4" />
+                        ) : (
+                          <Copy className="w-4 h-4" />
+                        )}
+                      </Button>
+                    </div>
+                </div>
+                
+              ))}
             </div>
             <p className="text-xs text-muted-foreground">
               Send ETH to this address or use the form below

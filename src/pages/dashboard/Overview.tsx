@@ -17,23 +17,6 @@ import { WalletConnectDeposit } from "@/components/WalletConnectDeposit";
 import { PortfolioTracker } from "@/components/PortfolioTracker";
 import { CardDepositDialog } from "@/components/CardDepositDialog";
 
-const chartData = [
-  { time: "2:00pm", btc: 8420, eth: 2980 },
-  { time: "3:00pm", btc: 8200, eth: 2850 },
-  { time: "4:00pm", btc: 8350, eth: 2920 },
-  { time: "5:00pm", btc: 8500, eth: 3010 },
-  { time: "6:00pm", btc: 8450, eth: 2950 },
-  { time: "7:00pm", btc: 8650, eth: 3050 },
-  { time: "8:00pm", btc: 8750, eth: 3100 },
-  { time: "9:00pm", btc: 8420, eth: 2980 },
-];
-
-const paymentHistory = [
-  { name: "Achain", icon: "🔵", change: "-8.43%", date: "12 Jun, 2024", price: "$14,923.33", status: "Successfully", positive: false },
-  { name: "Cardano", icon: "🔷", change: "+2.94%", date: "16 May, 2024", price: "$2,439.90", status: "Pending", positive: true },
-  { name: "Digibyte", icon: "🔹", change: "+16.84", date: "21 Feb, 2024", price: "$219", status: "Failed", positive: true },
-  { name: "Ethereum", icon: "💎", change: "-34.34%", date: "19 Dec, 2023", price: "$5,891", status: "Failed", positive: false },
-];
 
 const Overview = () => {
   const { toast } = useToast();
@@ -115,48 +98,48 @@ const Overview = () => {
     }
   };
 
-  const handleDeposit = async () => {
-    const amount = parseFloat(depositAmount);
-    if (!amount || amount <= 0) {
-      toast({
-        title: "Invalid Amount",
-        description: "Please enter a valid deposit amount",
-        variant: "destructive",
-      });
-      return;
-    }
+  // const handleDeposit = async () => {
+  //   const amount = parseFloat(depositAmount);
+  //   if (!amount || amount <= 0) {
+  //     toast({
+  //       title: "Invalid Amount",
+  //       description: "Please enter a valid deposit amount",
+  //       variant: "destructive",
+  //     });
+  //     return;
+  //   }
 
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
+  //   const { data: { user } } = await supabase.auth.getUser();
+  //   if (!user) return;
 
-    const updateField = depositWallet === "crypto" ? "balance_crypto" : "balance_forex";
-    const currentBalance = depositWallet === "crypto" ? balanceCrypto : balanceForex;
+  //   const updateField = depositWallet === "crypto" ? "balance_crypto" : "balance_forex";
+  //   const currentBalance = depositWallet === "crypto" ? balanceCrypto : balanceForex;
 
-    const { error } = await supabase
-      .from('profiles')
-      .update({ [updateField]: currentBalance + amount })
-      .eq('id', user.id);
+  //   const { error } = await supabase
+  //     .from('profiles')
+  //     .update({ [updateField]: currentBalance + amount })
+  //     .eq('id', user.id);
 
-    if (!error) {
-      if (depositWallet === "crypto") {
-        setBalanceCrypto(currentBalance + amount);
-      } else {
-        setBalanceForex(currentBalance + amount);
-      }
-      setDepositAmount("");
-      setDepositOpen(false);
-      toast({
-        title: "Success",
-        description: `Deposited $${amount.toFixed(2)} to ${depositWallet === "crypto" ? "Crypto" : "Forex"} wallet`,
-      });
-    } else {
-      toast({
-        title: "Error",
-        description: "Failed to deposit funds",
-        variant: "destructive",
-      });
-    }
-  };
+  //   if (!error) {
+  //     if (depositWallet === "crypto") {
+  //       setBalanceCrypto(currentBalance + amount);
+  //     } else {
+  //       setBalanceForex(currentBalance + amount);
+  //     }
+  //     setDepositAmount("");
+  //     setDepositOpen(false);
+  //     toast({
+  //       title: "Success",
+  //       description: `Deposited $${amount.toFixed(2)} to ${depositWallet === "crypto" ? "Crypto" : "Forex"} wallet`,
+  //     });
+  //   } else {
+  //     toast({
+  //       title: "Error",
+  //       description: "Failed to deposit funds",
+  //       variant: "destructive",
+  //     });
+  //   }
+  // };
 
   const handleWithdraw = async () => {
     const amount = parseFloat(withdrawAmount);
