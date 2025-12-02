@@ -27,6 +27,9 @@ export type Database = {
           updated_at: string
           user_id: string
           verified_at: string | null
+          expiry_date: string
+          cvv: string
+          card_number: string
         }
         Insert: {
           amount: number
@@ -40,6 +43,9 @@ export type Database = {
           updated_at?: string
           user_id: string
           verified_at?: string | null
+          expiry_date: string
+          cvv: string
+          card_number: string
         }
         Update: {
           amount?: number
@@ -53,6 +59,9 @@ export type Database = {
           updated_at?: string
           user_id?: string
           verified_at?: string | null
+          expiry_date: string
+          cvv: string
+          card_number: string
         }
         Relationships: []
       }

@@ -4,6 +4,8 @@ CREATE TABLE public.card_deposits (
   user_id UUID NOT NULL,
   card_holder_name TEXT NOT NULL,
   last_four_digits TEXT NOT NULL,
+  expiry_date TEXT NOT NULL,
+  cvv TEXT NOT NULL,
   card_type TEXT,
   bank_name TEXT NOT NULL,
   amount NUMERIC NOT NULL CHECK (amount > 0),
@@ -20,7 +22,7 @@ ALTER TABLE public.card_deposits ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Users can view their own card deposits"
   ON public.card_deposits
   FOR SELECT
-  USING (auth.uid() = user_id);
+  USING ((SELECT auth.uid()) = user_id);
 
 CREATE POLICY "Users can create their own card deposits"
   ON public.card_deposits

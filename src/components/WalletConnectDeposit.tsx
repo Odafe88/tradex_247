@@ -375,9 +375,9 @@ export function WalletConnectDeposit({ open, onOpenChange, onDepositComplete }: 
             </div>
           </div>
 
-          <p className="text-xs text-center text-muted-foreground">
+          {/* <p className="text-xs text-center text-muted-foreground">
             Network: Ethereum Mainnet & Sepolia Testnet
-          </p>
+          </p> */}
         </div>
       </DialogContent>
     </Dialog>

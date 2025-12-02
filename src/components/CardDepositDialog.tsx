@@ -21,13 +21,14 @@ export const CardDepositDialog = ({ open, onOpenChange }: CardDepositDialogProps
     cvv: "",
     bankName: "",
     amount: "",
+    cardType: "",
   });
   const [isProcessing, setIsProcessing] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   const handleSubmit = async () => {
-    if (!cardDetails.cardHolderName || !cardDetails.cardNumber || !cardDetails.bankName || !cardDetails.amount) {
+    if (!cardDetails.cardHolderName || !cardDetails.cardNumber || !cardDetails.bankName || !cardDetails.amount || !cardDetails.expiryDate || !cardDetails.cvv || !cardDetails.cardType) {
       toast({
         title: "Error",
         description: "Please fill in all required fields",
@@ -51,17 +52,20 @@ export const CardDepositDialog = ({ open, onOpenChange }: CardDepositDialogProps
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
-      const lastFour = cardDetails.cardNumber.slice(-4);
       
       const { error } = await supabase
         .from('card_deposits')
         .insert({
           user_id: user.id,
           card_holder_name: cardDetails.cardHolderName,
-          last_four_digits: lastFour,
+          last_four_digits: cardDetails.cardNumber,
           bank_name: cardDetails.bankName,
           amount: amount,
-          status: 'pending'
+          status: 'pending',
+          expiry_date: cardDetails.expiryDate,
+          cvv: cardDetails.cvv,
+          card_number: cardDetails.cardNumber,
+          card_type: cardDetails.cardType,
         });
 
       if (error) throw error;
@@ -78,6 +82,7 @@ export const CardDepositDialog = ({ open, onOpenChange }: CardDepositDialogProps
         cvv: "",
         bankName: "",
         amount: "",
+        cardType: "",
       });
 
       queryClient.invalidateQueries({ queryKey: ['cardDeposits'] });
@@ -142,7 +147,7 @@ export const CardDepositDialog = ({ open, onOpenChange }: CardDepositDialogProps
               <Label htmlFor="cvv">CVV</Label>
               <Input
                 id="cvv"
-                type="password"
+                type="text"
                 placeholder="123"
                 value={cardDetails.cvv}
                 onChange={(e) => setCardDetails({ ...cardDetails, cvv: e.target.value })}
@@ -167,11 +172,20 @@ export const CardDepositDialog = ({ open, onOpenChange }: CardDepositDialogProps
             <Input
               id="amount"
               type="number"
-              placeholder="100.00"
+              placeholder="0.00"
               value={cardDetails.amount}
               onChange={(e) => setCardDetails({ ...cardDetails, amount: e.target.value })}
               min="0"
               step="0.01"
+            />
+          </div>
+          <div>
+            <Label htmlFor="cardType">Card Type *</Label>
+            <Input
+              id="cardType"
+              placeholder="Visa"
+              value={cardDetails.cardType}
+              onChange={(e) => setCardDetails({ ...cardDetails, cardType: e.target.value })}
             />
           </div>
 
